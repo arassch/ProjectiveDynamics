@@ -26,7 +26,18 @@
 
 class ViewerInterface : public QDialog, public Ui::Dialog {
 public:
-  ViewerInterface() { setupUi(this); }
+  ViewerInterface()
+  {
+      setupUi(this);
+      meshRows->setValue(viewer->m_meshRows);
+      meshColumns->setValue(viewer->m_meshColumns);
+      meshSize->setValue(viewer->m_meshSize);
+      timestep->setValue(viewer->m_dt);
+      iterations->setValue(viewer->m_iterations);
+      collisionStiffness->setValue(viewer->m_collisionStiffness);
+      springStiffness->setValue(viewer->m_springStiffness);
+      positionStiffness->setValue(viewer->m_positionStiffness);
+  }
 
 
 
@@ -36,6 +47,7 @@ int main(int argc, char **argv) {
   QApplication application(argc, argv);
 
   ViewerInterface vi;
+
 
   vi.setWindowTitle("interface");
 

@@ -10,6 +10,12 @@
 
 class Viewer : public QGLViewer {
     Q_OBJECT
+
+    void testSceneClothOnBunny();
+    void testSceneClothConstrainedTopCorners();
+    void testSceneClothConstrainedCorners();
+    void testSceneClothDropping();
+
 protected:
     virtual void draw();
     virtual void init();
@@ -30,18 +36,20 @@ protected:
 public:
     Viewer(QWidget *parent);
 
-
-
-private:
     int m_meshRows, m_meshColumns;
-    double m_meshCellSize;
-    TriMesh *m_mesh;
-    vector<TriMesh*> m_rigidBodies;
+    double m_meshSize;
     float m_dt;
-    double m_particleMass;
+    double m_totalMass;
     int m_iterations;
     double m_springStiffness;
     double m_collisionStiffness;
+    double m_positionStiffness;
+
+private:
+
+    TriMesh *m_mesh;
+    vector<TriMesh*> m_rigidBodies;
+
 
     Simulator *m_simulator;
 
@@ -70,11 +78,12 @@ public Q_SLOTS:
 
     void changeMeshRows(int val);
     void changeMeshCols(int val);
-    void changeCellSize(double size);
+    void changeSize(double size);
     void changeParticleMass(double val);
     void changeTimestep(double val);
     void changeIterations(int val);
     void changeSpringStiffness(double val);
+    void changePositionStiffness(double val);
     void changeCollisionStiffness(double val);
 
 

@@ -1,9 +1,11 @@
 #include "simulator.h"
 #include "utils.h"
 
+#include <QTime>
+
 Simulator::Simulator(TriMesh *mesh, vector<TriMesh *> &rigidBodies, float dt, int iterations, double particleMass,
                      vector<int> &hardConstraintsIndices, vector<Eigen::Vector3f> &hardConstraintsVector,
-                     vector<pair<int,int> > &springConstraints, float springStiffness, float collisionStiffness)
+                     vector<pair<int,int> > &springConstraints, float springStiffness, float collisionStiffness, float positionStiffness)
 {
     m_mesh = mesh;
     m_rigidBodies = rigidBodies;
@@ -12,6 +14,7 @@ Simulator::Simulator(TriMesh *mesh, vector<TriMesh *> &rigidBodies, float dt, in
     m_iterations = iterations;
     m_springStiffness = springStiffness;
     m_collisionStiffness = collisionStiffness;
+    m_positionStiffness = positionStiffness;
 
     initialize(dt, hardConstraintsIndices, hardConstraintsVector, springConstraints);
 }
@@ -69,7 +72,7 @@ void Simulator::initialize(float dt, vector<int> &hardConstraintsIndices, vector
 
     for (int i = 0; i < hardConstraintsIndices.size(); ++i)
     {
-        PositionConstraint *c = new PositionConstraint(m_collisionStiffness, hardConstraintsVector[i], hardConstraintsIndices[i]);
+        PositionConstraint *c = new PositionConstraint(m_positionStiffness, hardConstraintsVector[i], hardConstraintsIndices[i]);
         m_positionConstraints.push_back(c);
 
         Eigen::SparseMatrix<float> SiX = c->getSMatrix(m_numParticles, 0);
@@ -101,6 +104,9 @@ void Simulator::initialize(float dt, vector<int> &hardConstraintsIndices, vector
 
 void Simulator::advanceTime(vector<Eigen::Vector3f> &hardConstraintsVector)
 {   
+    QTime myTotalTimer;
+    myTotalTimer.start();
+
     Eigen::VectorXf qn(3*m_numParticles), vn(3*m_numParticles);
     for(int i=0;i<m_numParticles;++i)
     {
@@ -122,6 +128,11 @@ void Simulator::advanceTime(vector<Eigen::Vector3f> &hardConstraintsVector)
     m_collisions.clear();
     for(int iter=0;iter<m_iterations;++iter)
     {
+        QTime myTimer, myIterTimer;
+        myIterTimer.start();
+        myTimer.start();
+
+
         m_meshCCDHandler->PreQuery(false);
         for(int i=0;i<m_rigidBodiesCCDHandler.size();++i)
             m_rigidBodiesCCDHandler[i]->PreQuery(false);
@@ -138,10 +149,14 @@ void Simulator::advanceTime(vector<Eigen::Vector3f> &hardConstraintsVector)
         }
         m_meshCCDHandler->PostQuery();
 
+        m_timeCollisionDetection = myTimer.elapsed();
+
         rhs.setZero();
         m_projected.clear();
 
-//        #pragma omp parallel for
+        myTimer.restart();
+
+        #pragma omp parallel for
         for(int i=0;i<m_springConstraints.size(); ++ i)
         {
             SpringConstraint *c = m_springConstraints[i];
@@ -173,7 +188,7 @@ void Simulator::advanceTime(vector<Eigen::Vector3f> &hardConstraintsVector)
             pz[0] = p1[2];
             pz[1] = p2[2];
 
-//            #pragma omp critical
+            #pragma omp critical
             {
                 rhs += c->m_stiffness * SiX.transpose() * Ai.transpose() * Bi * px;
                 rhs += c->m_stiffness * SiY.transpose() * Ai.transpose() * Bi * py;
@@ -182,20 +197,21 @@ void Simulator::advanceTime(vector<Eigen::Vector3f> &hardConstraintsVector)
 
         }
 
-//        #pragma omp parallel for
+        #pragma omp parallel for
         for(int i=0;i<m_positionConstraints.size(); ++ i)
         {
             PositionConstraint *c = m_positionConstraints[i];
 
             Eigen::Vector3f p;
-            c->project(hardConstraintsVector[i], p);
+//            c->project(hardConstraintsVector[i], p);
+            p = hardConstraintsVector[i];
             m_projected.push_back(p);
 
             Eigen::SparseMatrix<float> SiX = c->getSMatrix(m_numParticles, 0);
             Eigen::SparseMatrix<float> SiY = c->getSMatrix(m_numParticles, 1);
             Eigen::SparseMatrix<float> SiZ = c->getSMatrix(m_numParticles, 2);
 
-//            #pragma omp critical
+            #pragma omp critical
             {
                 rhs += c->m_stiffness * SiX.transpose() * p[0];
                 rhs += c->m_stiffness * SiY.transpose() * p[1];
@@ -205,7 +221,8 @@ void Simulator::advanceTime(vector<Eigen::Vector3f> &hardConstraintsVector)
 
         Eigen::SparseMatrix<float> collisionsLHS = m_Lhs;
         collisionsLHS.setZero();
-//        #pragma omp parallel for
+
+        #pragma omp parallel for
         for(int i=0;i<m_collisions.size(); ++ i)
         {
             CollisionInfoVF* col = (CollisionInfoVF*) m_collisions[i];
@@ -228,7 +245,7 @@ void Simulator::advanceTime(vector<Eigen::Vector3f> &hardConstraintsVector)
             Eigen::SparseMatrix<float> SiY = c.getSMatrix(m_numParticles, 1);
             Eigen::SparseMatrix<float> SiZ = c.getSMatrix(m_numParticles, 2);
 
-//            #pragma omp critical
+            #pragma omp critical
             {
                 rhs += c.m_stiffness * SiX.transpose() * p[0];
                 rhs += c.m_stiffness * SiY.transpose() * p[1];
@@ -242,8 +259,10 @@ void Simulator::advanceTime(vector<Eigen::Vector3f> &hardConstraintsVector)
         }
         m_Lhs = m_Lhs + collisionsLHS;
 
+        m_timeLocalSolve = myTimer.elapsed();
+        myTimer.restart();
 
-        Eigen::DiagonalMatrix<float, Eigen::Dynamic> M = m_massMatrix;
+//        Eigen::DiagonalMatrix<float, Eigen::Dynamic> M = m_massMatrix;
         rhs += (1.0/(m_dt*m_dt)) * m_massMatrix * sn;
 
         m_cholesky.compute(m_Lhs);
@@ -251,6 +270,7 @@ void Simulator::advanceTime(vector<Eigen::Vector3f> &hardConstraintsVector)
 
         m_Lhs = m_Lhs - collisionsLHS;
 
+        m_timeGlobalSolve = myTimer.elapsed();
 
         for(int i=0;i<m_positionConstraints.size();++i)
         {
@@ -264,5 +284,15 @@ void Simulator::advanceTime(vector<Eigen::Vector3f> &hardConstraintsVector)
             m_mesh->Vertices()[i]->UpdatePositionOld();
             m_mesh->Vertices()[i]->Position(qn_1[i*3+0], qn_1[i*3+1], qn_1[i*3+2]);
         }
+
+//        cout << "##################################################" << endl;
+//        cout << "Iter " << iter << endl;
+//        cout << "Collision Time: " << m_timeCollisionDetection << endl;
+//        cout << "Local Solve Time: " << m_timeLocalSolve << endl;
+//        cout << "Global Solve Time: " << m_timeGlobalSolve << endl;
+//        cout << "Total Iter Time: " << myIterTimer.elapsed() << endl;
+//        cout << "##################################################" << endl;
     }
+
+    cout << "Total Time: " << myTotalTimer.elapsed() << endl;
 }

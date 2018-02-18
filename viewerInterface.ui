@@ -86,7 +86,7 @@
          <number>1</number>
         </property>
         <property name="value">
-         <number>12</number>
+         <number>10</number>
         </property>
        </widget>
       </item>
@@ -98,7 +98,7 @@
        </widget>
       </item>
       <item row="1" column="2">
-       <widget class="QDoubleSpinBox" name="meshCellSize">
+       <widget class="QDoubleSpinBox" name="meshSize">
         <property name="minimum">
          <double>0.000000000000000</double>
         </property>
@@ -106,14 +106,14 @@
          <double>0.100000000000000</double>
         </property>
         <property name="value">
-         <double>0.100000000000000</double>
+         <double>1.000000000000000</double>
         </property>
        </widget>
       </item>
       <item row="0" column="2">
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Cell Size</string>
+         <string>Mesh Size</string>
         </property>
        </widget>
       </item>
@@ -123,7 +123,7 @@
          <number>1</number>
         </property>
         <property name="value">
-         <number>12</number>
+         <number>10</number>
         </property>
        </widget>
       </item>
@@ -153,7 +153,7 @@
          <double>0.002500000000000</double>
         </property>
         <property name="value">
-         <double>0.002500000000000</double>
+         <double>5.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -166,10 +166,23 @@
       <string>Simulator</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_5">
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="collisionStiffness">
+        <property name="decimals">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <double>99999999.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1000000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_8">
         <property name="text">
-         <string>Timestep</string>
+         <string>Spring Stiffness</string>
         </property>
        </widget>
       </item>
@@ -185,51 +198,7 @@
          <double>0.001000000000000</double>
         </property>
         <property name="value">
-         <double>0.001000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="iterations">
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="value">
-         <number>10</number>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="text">
-         <string>Iterations</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Collision Stiffness</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QDoubleSpinBox" name="collisionStiffness">
-        <property name="decimals">
-         <number>0</number>
-        </property>
-        <property name="maximum">
-         <double>99999999.000000000000000</double>
-        </property>
-        <property name="value">
-         <double>10000.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>Spring Stiffness</string>
+         <double>0.100000000000000</double>
         </property>
        </widget>
       </item>
@@ -242,7 +211,61 @@
          <double>9999999999.000000000000000</double>
         </property>
         <property name="value">
+         <double>10000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Timestep</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Collision Stiffness</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSpinBox" name="iterations">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="value">
+         <number>1</number>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Iterations</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Position Stiffness</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QDoubleSpinBox" name="positionStiffness">
+        <property name="decimals">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <double>999999999999.000000000000000</double>
+        </property>
+        <property name="singleStep">
          <double>100.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1000000.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -265,7 +288,7 @@
    <header location="global">viewer.h</header>
    <container>1</container>
    <slots>
-    <slot>changeCellSize(double)</slot>
+    <slot>changeSize(double)</slot>
     <slot>changeMeshRows(int)</slot>
     <slot>changeMeshCols(int)</slot>
     <slot>changeParticleMass(double)</slot>
@@ -274,6 +297,7 @@
     <slot>changeCollisionStiffness(double)</slot>
     <slot>changeSpringStiffness(double)</slot>
     <slot>reset()</slot>
+    <slot>changePositionStiffness(double)</slot>
    </slots>
   </customwidget>
  </customwidgets>
@@ -376,10 +400,10 @@
    </hints>
   </connection>
   <connection>
-   <sender>meshCellSize</sender>
+   <sender>meshSize</sender>
    <signal>valueChanged(double)</signal>
    <receiver>viewer</receiver>
-   <slot>changeCellSize(double)</slot>
+   <slot>changeSize(double)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>529</x>
@@ -516,6 +540,22 @@
     <hint type="destinationlabel">
      <x>424</x>
      <y>156</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>positionStiffness</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>viewer</receiver>
+   <slot>changePositionStiffness(double)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>627</x>
+     <y>598</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>424</x>
+     <y>139</y>
     </hint>
    </hints>
   </connection>

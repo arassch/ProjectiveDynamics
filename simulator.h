@@ -31,9 +31,9 @@ class Simulator
     int m_iterations;
     float m_springStiffness;
     float m_collisionStiffness;
+    float m_positionStiffness;
 
-    std::vector<PositionConstraint*> m_positionConstraints;
-    std::vector<SpringConstraint*> m_springConstraints;
+
 
     double m_particleMass;
     Eigen::DiagonalMatrix<float, Eigen::Dynamic> m_massMatrix;
@@ -42,18 +42,24 @@ class Simulator
     Eigen::SparseMatrix<float> m_Lhs;
     Eigen::SimplicialCholesky<Eigen::SparseMatrix<float> > m_cholesky;
 
+    int m_timeCollisionDetection;
+    int m_timeLocalSolve;
+    int m_timeGlobalSolve;
+
 
 public:
 
     Eigen::VectorXf m_fext;
 
     vector<Eigen::Vector3f> m_projected;
+    std::vector<PositionConstraint*> m_positionConstraints;
+    std::vector<SpringConstraint*> m_springConstraints;
 
 
     Simulator(TriMesh* mesh, vector<TriMesh*> &rigidBodies, float dt, int iterations, double particleMass,
               vector<int> &hardConstraintsIndices, vector<Eigen::Vector3f> &hardConstraintsVector,
               vector<pair<int,int> > &springConstraints, float springStiffness,
-              float collisionStiffness);
+              float collisionStiffness, float positionStiffness);
     virtual ~Simulator();
 
     void initialize(float dt, vector<int> &hardConstraintsIndices, vector<Eigen::Vector3f> &hardConstraintsVector,
