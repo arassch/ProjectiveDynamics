@@ -6,6 +6,7 @@
 #include <Eigen/Core>
 
 #include <TriMesh.h>
+#include <TetraMesh.h>
 #include "simulator.h"
 
 class Viewer : public QGLViewer {
@@ -15,6 +16,8 @@ class Viewer : public QGLViewer {
     void testSceneClothConstrainedTopCorners();
     void testSceneClothConstrainedCorners();
     void testSceneClothDropping();
+    void testSceneSingleTetra();
+    void testSceneDeformableSphere();
 
 protected:
     virtual void draw();
@@ -42,18 +45,20 @@ public:
     double m_totalMass;
     int m_iterations;
     double m_springStiffness;
+    double m_tetraStiffness;
     double m_collisionStiffness;
     double m_positionStiffness;
 
 private:
 
     TriMesh *m_mesh;
-    vector<TriMesh*> m_rigidBodies;
+    vector<TriMesh*> m_staticBodies;
 
 
     Simulator *m_simulator;
 
     vector<pair<int, int> > m_springConstraints;
+    vector<vector<int> > m_tetraConstraints;
     vector<int> m_hardConstraintsIndices;
     vector<Eigen::Vector3f> m_hardConstraintsPositions;
 
@@ -83,8 +88,10 @@ public Q_SLOTS:
     void changeTimestep(double val);
     void changeIterations(int val);
     void changeSpringStiffness(double val);
+    void changeTetraStiffness(double val);
     void changePositionStiffness(double val);
     void changeCollisionStiffness(double val);
+
 
 
 };

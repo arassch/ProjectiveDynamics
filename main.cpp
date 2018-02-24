@@ -6,10 +6,10 @@
 
  http://www.libqglviewer.com - contact@libqglviewer.com
 
- This file may be used under the terms of the GNU General Public License 
+ This file may be used under the terms of the GNU General Public License
  versions 2.0 or 3.0 as published by the Free Software Foundation and
  appearing in the LICENSE file included in the packaging of this file.
- In addition, as a special exception, Gilles Debunne gives you certain 
+ In addition, as a special exception, Gilles Debunne gives you certain
  additional rights, described in the file GPL_EXCEPTION in this package.
 
  libQGLViewer uses dual licensing. Commercial/proprietary software must
@@ -26,33 +26,38 @@
 
 class ViewerInterface : public QDialog, public Ui::Dialog {
 public:
-  ViewerInterface()
-  {
-      setupUi(this);
-      meshRows->setValue(viewer->m_meshRows);
-      meshColumns->setValue(viewer->m_meshColumns);
-      meshSize->setValue(viewer->m_meshSize);
-      timestep->setValue(viewer->m_dt);
-      iterations->setValue(viewer->m_iterations);
-      collisionStiffness->setValue(viewer->m_collisionStiffness);
-      springStiffness->setValue(viewer->m_springStiffness);
-      positionStiffness->setValue(viewer->m_positionStiffness);
-  }
+    ViewerInterface()
+    {
+        setupUi(this);
+        meshRows->setValue(viewer->m_meshRows);
+        meshColumns->setValue(viewer->m_meshColumns);
+        meshSize->setValue(viewer->m_meshSize);
+        timestep->setValue(viewer->m_dt);
+        iterations->setValue(viewer->m_iterations);
+        collisionStiffness->setValue(viewer->m_collisionStiffness);
+        springStiffness->setValue(viewer->m_springStiffness);
+        tetraStiffness->setValue(viewer->m_tetraStiffness);
+        positionStiffness->setValue(viewer->m_positionStiffness);
+    }
 
 
 
 };
 
 int main(int argc, char **argv) {
-  QApplication application(argc, argv);
+#if __cplusplus > 201402L
+    std::cout << "C++17" << std::endl;
+#endif
 
-  ViewerInterface vi;
+    QApplication application(argc, argv);
+
+    ViewerInterface vi;
 
 
-  vi.setWindowTitle("interface");
+    vi.setWindowTitle("interface");
 
-  vi.show();
-  vi.show();
+    vi.show();
+    vi.show();
 
-  return application.exec();
+    return application.exec();
 }

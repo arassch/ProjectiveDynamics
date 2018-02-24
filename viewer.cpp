@@ -6,6 +6,8 @@
 
 #include "utils.h"
 #include <TriCirculator.h>
+#include <Tetra.h>
+#include <Vertex.h>
 
 using namespace qglviewer;
 using namespace std;
@@ -17,12 +19,18 @@ void Viewer::init()
     glDisable(GL_LIGHTING);
 
 
-    testSceneClothOnBunny();
+//    testSceneClothOnBunny();
 //    testSceneClothConstrainedTopCorners();
 //    testSceneClothConstrainedCorners();
 //    testSceneClothDropping();
+    testSceneSingleTetra();
+//    testSceneDeformableSphere();
 
-    m_simulator = new Simulator(m_mesh, m_rigidBodies, m_dt, m_iterations, m_totalMass, m_hardConstraintsIndices, m_hardConstraintsPositions, m_springConstraints, m_springStiffness, m_collisionStiffness, m_positionStiffness);
+    m_simulator = new Simulator(m_mesh, m_staticBodies, m_dt, m_iterations, m_totalMass,
+                                m_hardConstraintsIndices, m_hardConstraintsPositions,
+                                m_springConstraints, m_springStiffness,
+                                m_tetraConstraints, m_tetraStiffness,
+                                m_collisionStiffness, m_positionStiffness);
 
     m_play = false;
     m_step = false;
@@ -90,10 +98,10 @@ void Viewer::testSceneClothOnBunny()
 
 
 
-    // Rigid bodies
+    // static bodies
     TriMesh *rb = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/bunny.obj", TriMesh::OBJ, 2.0f);
     rb->Transform(Vector3(0,0.0,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(-1,0,0)));
-    m_rigidBodies.push_back(rb);
+    m_staticBodies.push_back(rb);
 }
 
 void Viewer::testSceneClothConstrainedTopCorners()
@@ -278,17 +286,81 @@ void Viewer::testSceneClothDropping()
             m_springConstraints.push_back(make_pair(v1,v2));
     }
 
-    // Rigid bodies
+    // static bodies
     TriMesh *rb = TriMesh::CreateBlockMesh(Vector3(-10,-10,-10), Vector3(10, -1, 10));
-    m_rigidBodies.push_back(rb);
+    m_staticBodies.push_back(rb);
+}
+
+void Viewer::testSceneSingleTetra()
+{
+    glPointSize(10.0);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+    m_hardConstraintsIndices.clear();
+    m_hardConstraintsPositions.clear();
+    m_selection.clear();
+    m_springConstraints.clear();
+    m_tetraConstraints.clear();
+
+    m_mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/tetra.obj", TriMesh::OBJ);
+//    m_staticBodies.push_back(m_mesh);
+
+    vector<int> tetra;
+    tetra.push_back(0);
+    tetra.push_back(1);
+    tetra.push_back(2);
+    tetra.push_back(3);
+    m_tetraConstraints.push_back(tetra);
+
+    {
+        addIdToSelection(0);
+        m_hardConstraintsIndices.push_back(0);
+        m_hardConstraintsPositions.push_back(toEigenVector3(m_mesh->Vertices()[0]->Position()));
+    }
+
+}
+
+void Viewer::testSceneDeformableSphere()
+{
+    glPointSize(10.0);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+    m_hardConstraintsIndices.clear();
+    m_hardConstraintsPositions.clear();
+    m_selection.clear();
+    m_springConstraints.clear();
+    m_tetraConstraints.clear();
+
+    m_mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ);
+    TetraMesh* tetra = TetraMesh::CreateEmbeddingMesh(20, m_mesh, true);
+
+
+    vector<Tetra*> tetras = tetra->getAllTets();
+
+    for(int i=0;i<tetra->numTetras();++i)
+    {
+        vector<int> tetraIndices;
+        Tetra* t = tetras[i];
+        tetraIndices.push_back(t->_vertex[0]->_id);
+        tetraIndices.push_back(t->_vertex[1]->_id);
+        tetraIndices.push_back(t->_vertex[2]->_id);
+        tetraIndices.push_back(t->_vertex[3]->_id);
+
+        m_tetraConstraints.push_back(tetraIndices);
+    }
+
+
+    // static bodies
+    TriMesh *rb = TriMesh::CreateBlockMesh(Vector3(-10,-10,-10), Vector3(10, -2, 10));
+    m_staticBodies.push_back(rb);
 }
 
 void Viewer::draw()
 {
-//    m_mesh->Draw();
+    m_mesh->Draw();
 
-    for(int i=0;i<m_rigidBodies.size();++i)
-        m_rigidBodies[i]->Draw();
+    for(int i=0;i<m_staticBodies.size();++i)
+        m_staticBodies[i]->Draw();
 
     glDisable(GL_LIGHTING);
     glPointSize(10);
@@ -330,12 +402,39 @@ void Viewer::draw()
     for (unsigned i = 0; i < m_simulator->m_springConstraints.size(); i++)
     {
         SpringConstraint* constraint = m_simulator->m_springConstraints[i];
-        Vector3 p1 = verts[constraint->getVIndex1()]->Position();
-        Vector3 p2 = verts[constraint->getVIndex2()]->Position();
+        Vector3 p1 = verts[constraint->getVIndex(0)]->Position();
+        Vector3 p2 = verts[constraint->getVIndex(1)]->Position();
         glVertex3f(p1[0], p1[1], p1[2]);
         glVertex3f(p2[0], p2[1], p2[2]);
     }
+
+    for (unsigned i = 0; i < m_simulator->m_tetraConstraints.size(); i++)
+    {
+        TetraConstraint* constraint = m_simulator->m_tetraConstraints[i];
+        Vector3 p1 = verts[constraint->getVIndex(0)]->Position();
+        Vector3 p2 = verts[constraint->getVIndex(1)]->Position();
+        Vector3 p3 = verts[constraint->getVIndex(2)]->Position();
+        Vector3 p4 = verts[constraint->getVIndex(3)]->Position();
+        glVertex3f(p1[0], p1[1], p1[2]);
+        glVertex3f(p2[0], p2[1], p2[2]);
+
+        glVertex3f(p1[0], p1[1], p1[2]);
+        glVertex3f(p3[0], p3[1], p3[2]);
+
+        glVertex3f(p1[0], p1[1], p1[2]);
+        glVertex3f(p4[0], p4[1], p4[2]);
+
+        glVertex3f(p3[0], p3[1], p3[2]);
+        glVertex3f(p2[0], p2[1], p2[2]);
+
+        glVertex3f(p4[0], p4[1], p4[2]);
+        glVertex3f(p2[0], p2[1], p2[2]);
+
+        glVertex3f(p3[0], p3[1], p3[2]);
+        glVertex3f(p4[0], p4[1], p4[2]);
+    }
     glEnd();
+
 
     glEnable(GL_LIGHTING);
 
@@ -437,7 +536,7 @@ void Viewer::keyPressEvent(QKeyEvent *key)
                 m_hardConstraintsIndices.push_back(v->Id());
                 m_hardConstraintsPositions.push_back(toEigenVector3(pos));
             }
-            m_simulator->initialize(m_dt, m_hardConstraintsIndices, m_hardConstraintsPositions, m_springConstraints);
+            m_simulator->initialize(m_dt, m_hardConstraintsIndices, m_hardConstraintsPositions, m_springConstraints, m_tetraConstraints);
         }
     }
     else
@@ -609,6 +708,7 @@ Viewer::Viewer(QWidget *parent) : QGLViewer(parent)
     m_iterations = 1;
 
     m_springStiffness = 10000;
+    m_tetraStiffness = 10000;
     m_collisionStiffness = 1000000;
     m_positionStiffness = 1000000;
 
@@ -621,9 +721,9 @@ void Viewer::reset()
 
     delete(m_simulator);
     delete(m_mesh);
-    for(int i=0;i<m_rigidBodies.size();++i)
-        delete(m_rigidBodies[i]);
-    m_rigidBodies.clear();
+    for(int i=0;i<m_staticBodies.size();++i)
+        delete(m_staticBodies[i]);
+    m_staticBodies.clear();
     init();
 }
 
@@ -660,6 +760,11 @@ void Viewer::changeIterations(int val)
 void Viewer::changeSpringStiffness(double val)
 {
     m_springStiffness = val;
+}
+
+void Viewer::changeTetraStiffness(double val)
+{
+    m_tetraStiffness = val;
 }
 
 void Viewer::changePositionStiffness(double val)

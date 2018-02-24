@@ -3,27 +3,29 @@
 using namespace std;
 
 SpringConstraint::SpringConstraint(float stiffness, Eigen::Vector3f p1, Eigen::Vector3f p2, int vIndex1, int vIndex2) :
-    m_vIndex1(vIndex1), m_vIndex2(vIndex2)
+    Constraint(stiffness, 2), m_vIndex1(vIndex1), m_vIndex2(vIndex2)
 {
     m_restLength = (p1-p2).norm();
 
-    m_stiffness = stiffness;
 }
 
-void SpringConstraint::project(Eigen::Vector3f q1, Eigen::Vector3f q2, Eigen::Vector3f &p1, Eigen::Vector3f &p2)
+void SpringConstraint::project(std::vector<Eigen::Vector3f> q, std::vector<Eigen::Vector3f>& p)
 {
-    float l = (q1-q2).norm();
+    assert(q.size() == 2);
+    p.resize(2);
+
+    float l = (q[0]-q[1]).norm();
     float offset = (l - m_restLength)/2.0;
 
-    Eigen::Vector3f v = (q2 - q1);
+    Eigen::Vector3f v = (q[1] - q[0]);
     v.normalize();
-    p1 = q1 + offset * v;
-    p2 = q2 - offset * v;
+    p[0] = q[0] + offset * v;
+    p[1] = q[1] - offset * v;
 }
 
-Eigen::Matrix2f SpringConstraint::getAMatrix()
+Eigen::MatrixXf SpringConstraint::getAMatrix()
 {
-    Eigen::Matrix2f A;
+    Eigen::MatrixXf A(2,2);
     A.setOnes();
     A *= 0.5;
     A(0, 1) *= -1.0;
@@ -31,14 +33,9 @@ Eigen::Matrix2f SpringConstraint::getAMatrix()
     return A;
 }
 
-Eigen::Matrix2f SpringConstraint::getBMatrix()
+Eigen::MatrixXf SpringConstraint::getBMatrix()
 {
-    Eigen::Matrix2f B;
-    B.setOnes();
-    B *= 0.5;
-    B(0, 1) *= -1.0;
-    B(1, 0) *= -1.0;
-    return B;
+    return getAMatrix();
 }
 
 Eigen::SparseMatrix<float> SpringConstraint::getSMatrix(int numParticles, int dim)
@@ -50,4 +47,15 @@ Eigen::SparseMatrix<float> SpringConstraint::getSMatrix(int numParticles, int di
 
     Si.setFromTriplets(SiData.begin(), SiData.end());
     return Si;
+}
+
+int SpringConstraint::getVIndex(int index)
+{
+    switch(index)
+    {
+    case 0: return m_vIndex1; break;
+    case 1: return m_vIndex2; break;
+    default: return -1; break;
+    }
+    return -1;
 }

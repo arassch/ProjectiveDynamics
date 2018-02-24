@@ -23,19 +23,21 @@ HEADERS  = \
     springConstraint.h \
     simulator.h \
     utils.h \
-    positionConstraint.h
+    positionConstraint.h \
+    tetraConstraint.h \
+    constraint.h
 SOURCES  = main.cpp \
     viewer.cpp \
     springConstraint.cpp \
     simulator.cpp \
     utils.cpp \
-    positionConstraint.cpp
+    positionConstraint.cpp \
+    tetraConstraint.cpp
 
 FORMS *= viewerInterface.ui
 
 CONFIG += qt
 QT *= xml opengl widgets gui
-
 
 
 LIBS += -L$$PWD/../../libQGLViewer-2.7.0/QGLViewer/ -lQGLViewer
@@ -94,10 +96,31 @@ INCLUDEPATH += $$PWD/../../ElasticFEM/CDQueries/inc
 #PRE_TARGETDEPS += $$PWD/../../ElasticFEM/build-RigidBody-Desktop-Release/libRigidBody.a
 
 
-### Contact
-##LIBS += -L$$PWD/../../ElasticFEM/build-Contact-Desktop-Release/ -lContact
-#INCLUDEPATH += $$PWD/../../ElasticFEM/Contact/inc
-#DEPENDPATH += $$PWD/../../ElasticFEM/build-Contact-Desktop-Release
-##PRE_TARGETDEPS += $$PWD/../../ElasticFEM/build-Contact-Desktop-Release/libContact.a
+## Contact
+CONFIG(debug, debug|release) {
+    LIBS += -L$$PWD/../../ElasticFEM/build-Contact-Desktop-Debug/ -lContact
+    DEPENDPATH += $$PWD/../../ElasticFEM/build-Contact-Desktop-Debug
+    PRE_TARGETDEPS += $$PWD/../../ElasticFEM/build-Contact-Desktop-Debug/libContact.a
+}
+else {
+    LIBS += -L$$PWD/../../ElasticFEM/build-Contact-Desktop-Release/ -lContact
+    DEPENDPATH += $$PWD/../../ElasticFEM/build-Contact-Desktop-Release
+    PRE_TARGETDEPS += $$PWD/../../ElasticFEM/build-Contact-Desktop-Release/libContact.a
+}
+INCLUDEPATH += $$PWD/../../ElasticFEM/Contact/inc
+
+
+## FEM
+CONFIG(debug, debug|release) {
+    LIBS += -L$$PWD/../../ElasticFEM/build-FEM-Desktop-Debug/ -lFEM
+    DEPENDPATH += $$PWD/../../ElasticFEM/build-FEM-Desktop-Debug
+    PRE_TARGETDEPS += $$PWD/../../ElasticFEM/build-FEM-Desktop-Debug/libFEM.a
+}
+else {
+    LIBS += -L$$PWD/../../ElasticFEM/build-FEM-Desktop-Release/ -lFEM
+    DEPENDPATH += $$PWD/../../ElasticFEM/build-FEM-Desktop-Release
+    PRE_TARGETDEPS += $$PWD/../../ElasticFEM/build-FEM-Desktop-Release/libFEM.a
+}
+INCLUDEPATH += $$PWD/../../ElasticFEM/FEM/inc
 
 INCLUDEPATH += $$PWD/../../eigen

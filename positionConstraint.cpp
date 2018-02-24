@@ -3,15 +3,32 @@
 using namespace std;
 
 PositionConstraint::PositionConstraint(float stiffness, Eigen::Vector3f p, int vIndex)
+    : Constraint(stiffness, 1)
 {
     m_position = p;
     m_vIndex = vIndex;
-    m_stiffness = stiffness;
+}
+
+void PositionConstraint::project(std::vector<Eigen::Vector3f> q, std::vector<Eigen::Vector3f> &p)
+{
+    p = q;
 }
 
 void PositionConstraint::project(Eigen::Vector3f q, Eigen::Vector3f &p)
 {
     p = q;
+}
+
+Eigen::MatrixXf PositionConstraint::getAMatrix()
+{
+    Eigen::MatrixXf A(1,1);
+    A.setOnes();
+    return A;
+}
+
+Eigen::MatrixXf PositionConstraint::getBMatrix()
+{
+    return getAMatrix();
 }
 
 Eigen::SparseMatrix<float> PositionConstraint::getSMatrix(int numParticles, int dim)

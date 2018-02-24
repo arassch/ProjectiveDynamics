@@ -166,6 +166,13 @@
       <string>Simulator</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Position Stiffness</string>
+        </property>
+       </widget>
+      </item>
       <item row="2" column="1">
        <widget class="QDoubleSpinBox" name="collisionStiffness">
         <property name="decimals">
@@ -179,10 +186,17 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_8">
+      <item row="2" column="0">
+       <widget class="QLabel" name="label_7">
         <property name="text">
-         <string>Spring Stiffness</string>
+         <string>Collision Stiffness</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Timestep</string>
         </property>
        </widget>
       </item>
@@ -202,6 +216,13 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="text">
+         <string>Iterations</string>
+        </property>
+       </widget>
+      </item>
       <item row="3" column="1">
        <widget class="QDoubleSpinBox" name="springStiffness">
         <property name="decimals">
@@ -215,20 +236,6 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>Timestep</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_7">
-        <property name="text">
-         <string>Collision Stiffness</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="1">
        <widget class="QSpinBox" name="iterations">
         <property name="minimum">
@@ -239,21 +246,14 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_6">
+      <item row="3" column="0">
+       <widget class="QLabel" name="label_8">
         <property name="text">
-         <string>Iterations</string>
+         <string>Spring Stiffness</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_9">
-        <property name="text">
-         <string>Position Stiffness</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
+      <item row="5" column="1">
        <widget class="QDoubleSpinBox" name="positionStiffness">
         <property name="decimals">
          <number>0</number>
@@ -266,6 +266,26 @@
         </property>
         <property name="value">
          <double>1000000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Tetra Stiffness</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QDoubleSpinBox" name="tetraStiffness">
+        <property name="decimals">
+         <number>0</number>
+        </property>
+        <property name="maximum">
+         <double>9999999999.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>10000.000000000000000</double>
         </property>
        </widget>
       </item>
