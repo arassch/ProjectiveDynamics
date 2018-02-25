@@ -4,10 +4,13 @@
 #include <stdlib.h> // RAND_MAX
 
 
-#include "utils.h"
 #include <TriCirculator.h>
 #include <Tetra.h>
 #include <Vertex.h>
+
+#include "utils.h"
+#include "staticBody.h"
+
 
 using namespace qglviewer;
 using namespace std;
@@ -21,13 +24,13 @@ void Viewer::init()
     m_bodies.clear();
 
 //    testSceneClothOnBunny();
-    testSceneClothConstrainedTopCorners();
+//    testSceneClothConstrainedTopCorners();
 //    testSceneClothConstrainedCorners();
-//    testSceneClothDropping();
+    testSceneClothDropping();
 //    testSceneSingleTetra();
 //    testSceneDeformableSphere();
 
-    m_simulator = new Simulator(m_dt, m_iterations, m_bodies);
+    m_simulator = new Simulator(m_dt, m_iterations, m_bodies, m_collisionStiffness);
 
     m_play = false;
     m_step = false;
@@ -36,67 +39,28 @@ void Viewer::init()
     startAnimation();
 }
 
-//void Viewer::testSceneClothOnBunny()
-//{
-//    int rows = m_meshRows;
-//    int cols = m_meshColumns;
-//    float meshCellSize = m_meshSize/m_meshRows;
-//    TriMesh* mesh = TriMesh::CreatePatchMesh(rows, cols, meshCellSize);
-//    mesh->Transform(Vector3(0,0.5,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(1,0,0)));
-////    m_mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(M_PI_4, Vector3(0,0,1)));
-//    glPointSize(10.0);
-//    glBlendFunc(GL_ONE, GL_ONE);
+void Viewer::testSceneClothOnBunny()
+{
+    int rows = m_meshRows;
+    int cols = m_meshColumns;
+    float meshCellSize = m_meshSize/m_meshRows;
+    TriMesh* mesh = TriMesh::CreatePatchMesh(rows, cols, meshCellSize);
+    mesh->Transform(Vector3(0,0.5,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(1,0,0)));
+//    m_mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(M_PI_4, Vector3(0,0,1)));
+    glPointSize(10.0);
+    glBlendFunc(GL_ONE, GL_ONE);
 
-//    m_hardConstraintsIndices.clear();
-//    m_hardConstraintsPositions.clear();
-//    m_selection.clear();
+    SpringBody* body = new SpringBody(mesh, m_totalMass, m_springStiffness, true, 1.01*2*meshCellSize*meshCellSize);
 
-//    m_q.resize(mesh->NumVertices()*3);
-//    m_v.resize(mesh->NumVertices()*3);
-//    m_v.setZero();
-//    for(int i=0; i<mesh->NumVertices(); ++i)
-//    {
-//        m_q[i*3+0] = mesh->Vertices()[i]->Position()[0];
-//        m_q[i*3+1] = mesh->Vertices()[i]->Position()[1];
-//        m_q[i*3+2] = mesh->Vertices()[i]->Position()[2];
-//    }
+    m_bodies.push_back(body);
 
-//    m_springConstraints.clear();
-//    for(int i=0;i<mesh->Edges().size();++i)
-//    {
-//        TriEdge *edge = mesh->Edges()[i];
-//        int v1 = edge->Origin()->Id();
-//        int v2 = edge->Head()->Id();
-//        m_springConstraints.push_back(make_pair(v1,v2));
+    // static bodies
+    TriMesh *rb = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/bunny.obj", TriMesh::OBJ, 2.0f);
+    rb->Transform(Vector3(0,0.0,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(-1,0,0)));
 
-//        if(edge->IsBoundary())
-//            continue;
-
-//        TriFace* f1 = edge->AdjFace();
-//        TriFace* f2 = edge->Twin()->AdjFace();
-
-//        for(int j=0;j<3;++j)
-//        {
-//            if(f1->Vertex(j) != edge->Origin() &&
-//               f1->Vertex(j) != edge->Head())
-//                v1 = f1->Vertex(j)->Id();
-//            if(f2->Vertex(j) != edge->Twin()->Origin() &&
-//               f2->Vertex(j) != edge->Twin()->Head())
-//                v2 = f2->Vertex(j)->Id();
-//        }
-//        Vector3 v1p = mesh->Vertices()[v1]->PositionInit();
-//        Vector3 v2p = mesh->Vertices()[v2]->PositionInit();
-//        if(Vector3::squaredDistance(v1p, v2p) <= 1.01*2*meshCellSize*meshCellSize)
-//            m_springConstraints.push_back(make_pair(v1,v2));
-//    }
-
-
-
-//    // static bodies
-//    TriMesh *rb = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/bunny.obj", TriMesh::OBJ, 2.0f);
-//    rb->Transform(Vector3(0,0.0,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(-1,0,0)));
-//    m_staticBodies.push_back(rb);
-//}
+    StaticBody* bunny = new StaticBody(rb);
+    m_bodies.push_back(bunny);
+}
 
 void Viewer::testSceneClothConstrainedTopCorners()
 {
@@ -148,64 +112,29 @@ void Viewer::testSceneClothConstrainedCorners()
     m_bodies.push_back(body);
 }
 
-//void Viewer::testSceneClothDropping()
-//{
-//    int rows = m_meshRows;
-//    int cols = m_meshColumns;
-//    float meshCellSize = m_meshSize/m_meshRows;
-//    TriMesh* mesh = TriMesh::CreatePatchMesh(rows, cols, meshCellSize);
-//    mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(0.01, Vector3(1,0,0)));
+void Viewer::testSceneClothDropping()
+{
+    int rows = m_meshRows;
+    int cols = m_meshColumns;
+    float meshCellSize = m_meshSize/m_meshRows;
+    TriMesh* mesh = TriMesh::CreatePatchMesh(rows, cols, meshCellSize);
+    mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(0.1, Vector3(1,0,0)));
 
-//    glPointSize(10.0);
-//    glBlendFunc(GL_ONE, GL_ONE);
+    glPointSize(10.0);
+    glBlendFunc(GL_ONE, GL_ONE);
 
-//    m_hardConstraintsIndices.clear();
-//    m_hardConstraintsPositions.clear();
-//    m_selection.clear();
+    SpringBody* body = new SpringBody(mesh, m_totalMass, m_springStiffness, true, 1.01*2*meshCellSize*meshCellSize);
 
-//    m_q.resize(mesh->NumVertices()*3);
-//    m_v.resize(mesh->NumVertices()*3);
-//    m_v.setZero();
-//    for(int i=0; i<mesh->NumVertices(); ++i)
-//    {
-//        m_q[i*3+0] = mesh->Vertices()[i]->Position()[0];
-//        m_q[i*3+1] = mesh->Vertices()[i]->Position()[1];
-//        m_q[i*3+2] = mesh->Vertices()[i]->Position()[2];
-//    }
+    m_bodies.push_back(body);
 
-//    m_springConstraints.clear();
-//    for(int i=0;i<mesh->Edges().size();++i)
-//    {
-//        TriEdge *edge = mesh->Edges()[i];
-//        int v1 = edge->Origin()->Id();
-//        int v2 = edge->Head()->Id();
-//        m_springConstraints.push_back(make_pair(v1,v2));
+    // static bodies
+    TriMesh *rb = TriMesh::CreateBlockMesh(Vector3(-10,-10,-10), Vector3(10, -1, 10));
 
-//        if(edge->IsBoundary())
-//            continue;
+    StaticBody* floor = new StaticBody(rb);
+    m_bodies.push_back(floor);
 
-//        TriFace* f1 = edge->AdjFace();
-//        TriFace* f2 = edge->Twin()->AdjFace();
 
-//        for(int j=0;j<3;++j)
-//        {
-//            if(f1->Vertex(j) != edge->Origin() &&
-//               f1->Vertex(j) != edge->Head())
-//                v1 = f1->Vertex(j)->Id();
-//            if(f2->Vertex(j) != edge->Twin()->Origin() &&
-//               f2->Vertex(j) != edge->Twin()->Head())
-//                v2 = f2->Vertex(j)->Id();
-//        }
-//        Vector3 v1p = mesh->Vertices()[v1]->PositionInit();
-//        Vector3 v2p = mesh->Vertices()[v2]->PositionInit();
-//        if(Vector3::squaredDistance(v1p, v2p) <= 1.01*2*meshCellSize*meshCellSize)
-//            m_springConstraints.push_back(make_pair(v1,v2));
-//    }
-
-//    // static bodies
-//    TriMesh *rb = TriMesh::CreateBlockMesh(Vector3(-10,-10,-10), Vector3(10, -1, 10));
-//    m_staticBodies.push_back(rb);
-//}
+}
 
 //void Viewer::testSceneSingleTetra()
 //{
@@ -301,9 +230,6 @@ void Viewer::draw()
     for(int i=0;i<m_bodies.size();++i)
         m_bodies[i]->draw();
 
-    for(int i=0;i<m_staticBodies.size();++i)
-        m_staticBodies[i]->Draw();
-
     glDisable(GL_LIGHTING);
     glPointSize(10);
 
@@ -321,6 +247,14 @@ void Viewer::draw()
     for (unsigned i = 0; i < m_simulator->m_sn[0].rows(); i++)
     {
         glVertex3f(m_simulator->m_sn[0][i], m_simulator->m_sn[1][i], m_simulator->m_sn[2][i]);
+    }
+
+    glColor3f(1,0,0);
+    vector<CollisionInfo*> collisions = m_simulator->getCollisions();
+    for (unsigned i = 0; i < collisions.size(); i++)
+    {
+        LA::Vector3 p = collisions[i]->p;
+        glVertex3f(p[0], p[1], p[2]);
     }
 
     glEnd();
@@ -623,6 +557,8 @@ Viewer::Viewer(QWidget *parent) : QGLViewer(parent)
     m_collisionStiffness = 100000000;
     m_positionStiffness = 100000000;
 
+    m_simulator = 0;
+
 }
 
 void Viewer::reset()
@@ -631,9 +567,7 @@ void Viewer::reset()
     m_move = false;
 
     delete(m_simulator);
-    for(int i=0;i<m_staticBodies.size();++i)
-        delete(m_staticBodies[i]);
-    m_staticBodies.clear();
+
     init();
 }
 
@@ -685,5 +619,7 @@ void Viewer::changePositionStiffness(double val)
 void Viewer::changeCollisionStiffness(double val)
 {
     m_collisionStiffness = val;
+    if(m_simulator)
+        m_simulator->m_collisionStiffness = val;
 }
 

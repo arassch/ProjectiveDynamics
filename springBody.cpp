@@ -51,8 +51,8 @@ SpringBody::SpringBody(TriMesh *mesh, float particleMass, float springStiffness,
     }
 
     m_mesh->DeformWithoutInterpolation();
-    m_meshCCDHandler = new HashCCDHandler(m_mesh);
-    m_meshCCDHandler->Init();
+    m_CCDHandler = new HashCCDHandler(m_mesh);
+    m_CCDHandler->Init();
 }
 
 Eigen::VectorXf SpringBody::getPositions()

@@ -14,8 +14,6 @@ class SpringBody : public ProjectiveBody
 {
     TriMesh *m_mesh;
 
-    HashCCDHandler* m_meshCCDHandler;
-
     std::vector<SpringConstraint*> m_springConstraints;
 
     std::vector<PositionConstraint*> m_positionConstraints;
@@ -26,6 +24,8 @@ public:
     Eigen::VectorXf getPositions();
 
     void setPositions(const Eigen::VectorXf &qx, const Eigen::VectorXf &qy, const Eigen::VectorXf &qz);
+
+    void setVelocities(const Eigen::VectorXf &vx, const Eigen::VectorXf &vy, const Eigen::VectorXf &vz);
 
     std::vector<ProjectiveConstraint *> getConstraints();
 

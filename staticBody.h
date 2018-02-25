@@ -11,17 +11,15 @@ class StaticBody : public ProjectiveBody
 {
     TriMesh* m_mesh;
 
-    HashCCDHandler* m_meshCCDHandler;
-
 public:
     StaticBody(TriMesh* mesh)
         : ProjectiveBody(0), m_mesh(mesh)
     {
-        m_meshCCDHandler = new HashCCDHandler(m_mesh);
-        m_meshCCDHandler->Init();
+        m_CCDHandler = new HashCCDHandler(m_mesh);
+        m_CCDHandler->Init();
+        m_numParticles = 0;
     }
 
-    int getNumParticles() { return 0; }
 
     Eigen::VectorXf getParticleMassVector()
     {

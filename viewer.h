@@ -7,15 +7,16 @@
 
 #include <TriMesh.h>
 #include <TetraMesh.h>
+
 #include "simulator.h"
 
 class Viewer : public QGLViewer {
     Q_OBJECT
 
-//    void testSceneClothOnBunny();
+    void testSceneClothOnBunny();
     void testSceneClothConstrainedTopCorners();
     void testSceneClothConstrainedCorners();
-//    void testSceneClothDropping();
+    void testSceneClothDropping();
 //    void testSceneSingleTetra();
 //    void testSceneDeformableSphere();
 
@@ -52,7 +53,6 @@ public:
 private:
 
     vector<ProjectiveBody*> m_bodies;
-    vector<TriMesh*> m_staticBodies;
 
 
     Simulator *m_simulator;

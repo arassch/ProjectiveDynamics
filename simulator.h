@@ -24,7 +24,8 @@ class Simulator
 
     vector<ProjectiveBody*> m_bodies;
 
-//    vector<CollisionInfo*> m_collisions;
+    vector<CollisionInfo*> m_collisions;
+
 
     float m_dt;
     int m_iterations;
@@ -52,17 +53,18 @@ public:
 
     std::vector<Eigen::Vector3f> m_projected;
     std::vector<ProjectiveConstraint*> m_constraints;
+    float m_collisionStiffness;
 
 
-    Simulator(float dt, int iterations, std::vector<ProjectiveBody *> &bodies);
+    Simulator(float dt, int iterations, std::vector<ProjectiveBody *> &bodies, float collisionStiffness);
     virtual ~Simulator();
 
-    void initialize(float dt, int iterations, vector<ProjectiveBody*> &bodies);
+    void initialize(float dt, int iterations, vector<ProjectiveBody*> &bodies, float collisionStiffness);
 
     void advanceTime();
 
 
-//    vector<CollisionInfo *> getCollisions() const { return m_collisions; }
+    vector<CollisionInfo *> getCollisions() const { return m_collisions; }
 };
 
 #endif // SIMULATOR_H

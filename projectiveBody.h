@@ -3,6 +3,8 @@
 
 #include <Eigen/Core>
 
+#include <HashCCDHandler.h>
+
 class ProjectiveBody
 {
 protected:
@@ -11,9 +13,11 @@ protected:
 
     float m_totalMass;
 
+    HashCCDHandler* m_CCDHandler;
+
 public:
 
-    ProjectiveBody(float totalMass) : m_totalMass(totalMass) {}
+    ProjectiveBody(float totalMass) : m_totalMass(totalMass), m_CCDHandler(0) {}
 
     int getNumParticles() { return m_numParticles; }
 
@@ -24,6 +28,8 @@ public:
         mass *= m_totalMass / m_numParticles;
         return mass;
     }
+
+    HashCCDHandler* getCCDHandler() { return m_CCDHandler; }
 
     virtual Eigen::VectorXf getPositions() = 0;
 
