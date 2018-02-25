@@ -6,28 +6,28 @@
 #include <Eigen/Cholesky>
 #include <Eigen/SparseCholesky>
 
-#include <TriMesh.h>
-
 
 #include <CDQueries.h>
 #include <HashCCDHandler.h>
 #include <TriMesh.h>
 
-#include "constraint.h"
+#include "springBody.h"
+#include "projectiveConstraint.h"
 #include "springConstraint.h"
 #include "positionConstraint.h"
 #include "tetraConstraint.h"
 
 class Simulator
 {
-    TriMesh *m_mesh;
+
     int m_numParticles;
 
+    vector<ProjectiveBody*> m_bodies;
     vector<TriMesh*> m_staticBodies;
 
-    HashCCDHandler *m_meshCCDHandler;
-    vector<HashCCDHandler*> m_staticBodiesCCDHandler;
-    vector<CollisionInfo*> m_collisions;
+//    HashCCDHandler *m_meshCCDHandler;
+//    vector<HashCCDHandler*> m_staticBodiesCCDHandler;
+//    vector<CollisionInfo*> m_collisions;
 
     float m_dt;
     int m_iterations;
@@ -38,12 +38,12 @@ class Simulator
 
 
 
-    double m_particleMass;
+    Eigen::VectorXf m_particleMass;
     Eigen::DiagonalMatrix<float, Eigen::Dynamic> m_massMatrix;
     Eigen::DiagonalMatrix<float, Eigen::Dynamic> m_massMatrixInv;
 
-    Eigen::SparseMatrix<float> m_Lhs;
-    Eigen::SimplicialCholesky<Eigen::SparseMatrix<float> > m_cholesky;
+    Eigen::SparseMatrix<float> m_Lhs[3];
+    Eigen::SimplicialCholesky<Eigen::SparseMatrix<float> > m_cholesky[3];
 
     int m_timeCollisionDetection;
     int m_timeLocalSolve;
@@ -52,30 +52,26 @@ class Simulator
 
 public:
 
-    Eigen::VectorXf m_fext;
+    Eigen::VectorXf m_q[3];
+    Eigen::VectorXf m_v[3];
+    Eigen::VectorXf m_fext[3];
 
     std::vector<Eigen::Vector3f> m_projected;
     std::vector<PositionConstraint*> m_positionConstraints;
     std::vector<SpringConstraint*> m_springConstraints;
     std::vector<TetraConstraint*> m_tetraConstraints;
-    std::vector<Constraint*> m_constraints;
+    std::vector<ProjectiveConstraint*> m_constraints;
 
 
-    Simulator(TriMesh* mesh, vector<TriMesh*> &staticBodies, float dt, int iterations, double particleMass,
-              vector<int> &hardConstraintsIndices, vector<Eigen::Vector3f> &hardConstraintsVector,
-              vector<pair<int,int> > &springConstraints, float springStiffness,
-              vector<vector<int> > &tetraConstraints, float tetraStiffness,
-              float collisionStiffness, float positionStiffness);
+    Simulator(float dt, int iterations, std::vector<ProjectiveBody *> &bodies);
     virtual ~Simulator();
 
-    void initialize(float dt, vector<int> &hardConstraintsIndices, vector<Eigen::Vector3f> &hardConstraintsVector,
-                    vector<pair<int,int> > &springConstraints,
-                    vector<vector<int> > &tetraConstraints);
+    void initialize(float dt, int iterations, vector<ProjectiveBody*> &bodies);
 
-    void advanceTime(vector<Eigen::Vector3f> &hardConstraintsVector);
+    void advanceTime();
 
 
-    vector<CollisionInfo *> getCollisions() const { return m_collisions; }
+//    vector<CollisionInfo *> getCollisions() const { return m_collisions; }
 };
 
 #endif // SIMULATOR_H

@@ -6,9 +6,9 @@
 #include <Eigen/Sparse>
 #include <Eigen/SVD>
 
-#include "Constraint.h"
+#include "projectiveConstraint.h"
 
-class TetraConstraint : public Constraint
+class TetraConstraint : public ProjectiveConstraint
 {
     int m_vIndex1;
     int m_vIndex2;

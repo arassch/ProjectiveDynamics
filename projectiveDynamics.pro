@@ -25,14 +25,18 @@ HEADERS  = \
     utils.h \
     positionConstraint.h \
     tetraConstraint.h \
-    constraint.h
+    springBody.h \
+    projectiveBody.h \
+    staticBody.h \
+    projectiveConstraint.h
 SOURCES  = main.cpp \
     viewer.cpp \
     springConstraint.cpp \
     simulator.cpp \
     utils.cpp \
     positionConstraint.cpp \
-    tetraConstraint.cpp
+    tetraConstraint.cpp \
+    springBody.cpp
 
 FORMS *= viewerInterface.ui
 

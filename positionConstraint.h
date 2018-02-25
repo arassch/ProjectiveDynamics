@@ -2,10 +2,10 @@
 #define POSITIONCONSTRAINT_H
 
 
-#include "Constraint.h"
+#include "projectiveConstraint.h"
 
 
-class PositionConstraint : public Constraint
+class PositionConstraint : public ProjectiveConstraint
 {
     int m_vIndex;
 

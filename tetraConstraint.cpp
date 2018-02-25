@@ -3,7 +3,7 @@
 #include "utils.h"
 
 TetraConstraint::TetraConstraint(float stiffness, Eigen::Vector3f p1, Eigen::Vector3f p2, Eigen::Vector3f p3, Eigen::Vector3f p4, int vIndex1, int vIndex2, int vIndex3, int vIndex4)
-    : Constraint(stiffness, 4), m_vIndex1(vIndex1), m_vIndex2(vIndex2), m_vIndex3(vIndex3), m_vIndex4(vIndex4)
+    : ProjectiveConstraint(stiffness, 4), m_vIndex1(vIndex1), m_vIndex2(vIndex2), m_vIndex3(vIndex3), m_vIndex4(vIndex4)
 {
     m_Dm.col(0) = p4 - p1;
     m_Dm.col(1) = p4 - p2;

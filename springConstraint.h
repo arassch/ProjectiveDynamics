@@ -4,9 +4,9 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
-#include "Constraint.h"
+#include "projectiveConstraint.h"
 
-class SpringConstraint : public Constraint
+class SpringConstraint : public ProjectiveConstraint
 {
     float m_restLength;
     int m_vIndex1;

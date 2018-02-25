@@ -12,12 +12,12 @@
 class Viewer : public QGLViewer {
     Q_OBJECT
 
-    void testSceneClothOnBunny();
+//    void testSceneClothOnBunny();
     void testSceneClothConstrainedTopCorners();
     void testSceneClothConstrainedCorners();
-    void testSceneClothDropping();
-    void testSceneSingleTetra();
-    void testSceneDeformableSphere();
+//    void testSceneClothDropping();
+//    void testSceneSingleTetra();
+//    void testSceneDeformableSphere();
 
 protected:
     virtual void draw();
@@ -51,16 +51,11 @@ public:
 
 private:
 
-    TriMesh *m_mesh;
+    vector<ProjectiveBody*> m_bodies;
     vector<TriMesh*> m_staticBodies;
 
 
     Simulator *m_simulator;
-
-    vector<pair<int, int> > m_springConstraints;
-    vector<vector<int> > m_tetraConstraints;
-    vector<int> m_hardConstraintsIndices;
-    vector<Eigen::Vector3f> m_hardConstraintsPositions;
 
     bool m_play;
     bool m_step;

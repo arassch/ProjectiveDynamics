@@ -45,9 +45,6 @@ public:
 };
 
 int main(int argc, char **argv) {
-#if __cplusplus > 201402L
-    std::cout << "C++17" << std::endl;
-#endif
 
     QApplication application(argc, argv);
 
