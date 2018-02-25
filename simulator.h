@@ -23,18 +23,11 @@ class Simulator
     int m_numParticles;
 
     vector<ProjectiveBody*> m_bodies;
-    vector<TriMesh*> m_staticBodies;
 
-//    HashCCDHandler *m_meshCCDHandler;
-//    vector<HashCCDHandler*> m_staticBodiesCCDHandler;
 //    vector<CollisionInfo*> m_collisions;
 
     float m_dt;
     int m_iterations;
-    float m_springStiffness;
-    float m_collisionStiffness;
-    float m_positionStiffness;
-    float m_tetraStiffness;
 
 
 
@@ -55,11 +48,9 @@ public:
     Eigen::VectorXf m_q[3];
     Eigen::VectorXf m_v[3];
     Eigen::VectorXf m_fext[3];
+    Eigen::VectorXf m_sn[3];
 
     std::vector<Eigen::Vector3f> m_projected;
-    std::vector<PositionConstraint*> m_positionConstraints;
-    std::vector<SpringConstraint*> m_springConstraints;
-    std::vector<TetraConstraint*> m_tetraConstraints;
     std::vector<ProjectiveConstraint*> m_constraints;
 
 

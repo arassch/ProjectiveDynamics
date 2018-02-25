@@ -11,12 +11,13 @@ PositionConstraint::PositionConstraint(float stiffness, Eigen::Vector3f p, int v
 
 void PositionConstraint::project(std::vector<Eigen::Vector3f> q, std::vector<Eigen::Vector3f> &p)
 {
-    p = q;
+    p.resize(1);
+    p[0] = m_position;
 }
 
 void PositionConstraint::project(Eigen::Vector3f q, Eigen::Vector3f &p)
 {
-    p = q;
+    p = m_position;
 }
 
 Eigen::MatrixXf PositionConstraint::getAMatrix()

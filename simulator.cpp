@@ -94,14 +94,18 @@ void Simulator::advanceTime()
     QTime myTotalTimer;
     myTotalTimer.start();
 
-    Eigen::VectorXf qold[3], sn[3], rhs[3];
+    Eigen::VectorXf qold[3], rhs[3];
     qold[0] = m_q[0];
     qold[1] = m_q[1];
     qold[2] = m_q[2];
 
-    sn[0] = m_q[0] + m_dt*m_v[0] + m_dt*m_dt*m_massMatrixInv*m_fext[0];
-    sn[1] = m_q[1] + m_dt*m_v[1] + m_dt*m_dt*m_massMatrixInv*m_fext[1];
-    sn[2] = m_q[2] + m_dt*m_v[2] + m_dt*m_dt*m_massMatrixInv*m_fext[2];
+    m_sn[0] = m_q[0] + m_dt*m_v[0] + m_dt*m_dt*m_massMatrixInv*m_fext[0];
+    m_sn[1] = m_q[1] + m_dt*m_v[1] + m_dt*m_dt*m_massMatrixInv*m_fext[1];
+    m_sn[2] = m_q[2] + m_dt*m_v[2] + m_dt*m_dt*m_massMatrixInv*m_fext[2];
+
+    m_q[0] = m_sn[0];
+    m_q[1] = m_sn[1];
+    m_q[2] = m_sn[2];
 
     rhs[0].resize(m_numParticles);
     rhs[1].resize(m_numParticles);
@@ -224,9 +228,9 @@ void Simulator::advanceTime()
         m_timeLocalSolve = myTimer.elapsed();
         myTimer.restart();
 
-        rhs[0] += (1.0/(m_dt*m_dt)) * m_massMatrix * sn[0];
-        rhs[1] += (1.0/(m_dt*m_dt)) * m_massMatrix * sn[1];
-        rhs[2] += (1.0/(m_dt*m_dt)) * m_massMatrix * sn[2];
+        rhs[0] += (1.0/(m_dt*m_dt)) * m_massMatrix * m_sn[0];
+        rhs[1] += (1.0/(m_dt*m_dt)) * m_massMatrix * m_sn[1];
+        rhs[2] += (1.0/(m_dt*m_dt)) * m_massMatrix * m_sn[2];
 
 //        m_cholesky.compute(m_Lhs);
 #pragma omp parallel for

@@ -317,6 +317,12 @@ void Viewer::draw()
         glVertex3f(p[0], p[1], p[2]);
     }
 
+    glColor3f(0,1,0);
+    for (unsigned i = 0; i < m_simulator->m_sn[0].rows(); i++)
+    {
+        glVertex3f(m_simulator->m_sn[0][i], m_simulator->m_sn[1][i], m_simulator->m_sn[2][i]);
+    }
+
     glEnd();
 
 
@@ -608,8 +614,8 @@ Viewer::Viewer(QWidget *parent) : QGLViewer(parent)
     m_meshColumns = 10;
     m_meshSize = 1;
 
-    m_dt = 0.1;
-    m_totalMass = 5.0;
+    m_dt = 0.01;
+    m_totalMass = 1.0;
     m_iterations = 1;
 
     m_springStiffness = 10000;
