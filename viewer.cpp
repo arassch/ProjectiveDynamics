@@ -10,6 +10,7 @@
 
 #include "utils.h"
 #include "staticBody.h"
+#include "tetraBody.h"
 
 
 using namespace qglviewer;
@@ -26,9 +27,10 @@ void Viewer::init()
 //    testSceneClothOnBunny();
 //    testSceneClothConstrainedTopCorners();
 //    testSceneClothConstrainedCorners();
-    testSceneClothDropping();
+//    testSceneClothDropping();
 //    testSceneSingleTetra();
 //    testSceneDeformableSphere();
+    testSceneDeformableBlock();
 
     m_simulator = new Simulator(m_dt, m_iterations, m_bodies, m_collisionStiffness);
 
@@ -174,56 +176,35 @@ void Viewer::testSceneClothDropping()
 
 //}
 
-//void Viewer::testSceneDeformableSphere()
-//{
-//    glPointSize(10.0);
-//    glBlendFunc(GL_ONE, GL_ONE);
+void Viewer::testSceneDeformableSphere()
+{
+    glPointSize(10.0);
+    glBlendFunc(GL_ONE, GL_ONE);
 
-//    m_hardConstraintsIndices.clear();
-//    m_hardConstraintsPositions.clear();
-//    m_selection.clear();
-//    m_springConstraints.clear();
-//    m_tetraConstraints.clear();
+    TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ);
+    TetraBody* body = new TetraBody(mesh, m_totalMass, m_tetraStiffness);
 
-//    TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ);
-//    TetraMesh* tetra = TetraMesh::CreateEmbeddingMesh(5, mesh, true);
+    m_bodies.push_back(body);
+}
 
-//    Vertex* vertices = tetra->getVertex();
-//    m_q.resize(tetra->numVertices()*3);
-//    m_v.resize(tetra->numVertices()*3);
-//    m_v.setZero();
-//    for(int i=0; i<tetra->numVertices(); ++i)
-//    {
-//        Vertex* v = vertices+i;
-//        m_q[i*3+0] = v->getPosition()[0];
-//        m_q[i*3+1] = v->getPosition()[1];
-//        m_q[i*3+2] = v->getPosition()[2];
-//    }
+void Viewer::testSceneDeformableBlock()
+{
+    glPointSize(10.0);
+    glBlendFunc(GL_ONE, GL_ONE);
 
-//    vector<Tetra*> tetras = tetra->getAllTets();
+    TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv.obj", TriMesh::OBJ);
+    TetraBody* body = new TetraBody(mesh, m_totalMass, m_tetraStiffness);
 
-//    for(int i=0;i<tetra->numTetras();++i)
-//    {
-//        vector<int> tetraIndices;
-//        Tetra* t = tetras[i];
-//        tetraIndices.push_back(t->_vertex[0]->_id);
-//        tetraIndices.push_back(t->_vertex[1]->_id);
-//        tetraIndices.push_back(t->_vertex[2]->_id);
-//        tetraIndices.push_back(t->_vertex[3]->_id);
-
-//        m_tetraConstraints.push_back(tetraIndices);
-//    }
-
-//    {
-//        m_hardConstraintsIndices.push_back(0);
-//        m_hardConstraintsPositions.push_back(toEigenVector3(mesh->Vertices()[0]->Position()));
-//    }
+    LA::Bounds3d bbox(LA::Vector3(-1,-1,-1), LA::Vector3(0.1, 1, 1));
+    std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
+    for(int i=0;i<leftVertices.size();++i)
+    {
+        body->addPositionConstraint(m_positionStiffness, leftVertices[i]->Id());
+    }
 
 
-//    // static bodies
-//    TriMesh *rb = TriMesh::CreateBlockMesh(Vector3(-10,-10,-10), Vector3(10, -2, 10));
-//    m_staticBodies.push_back(rb);
-//}
+    m_bodies.push_back(body);
+}
 
 void Viewer::draw()
 {

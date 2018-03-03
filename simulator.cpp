@@ -111,32 +111,32 @@ void Simulator::advanceTime()
     rhs[1].resize(m_numParticles);
     rhs[2].resize(m_numParticles);
     m_collisions.clear();
+
+    for(int i=0;i<m_bodies.size();++i)
+    {
+        if(m_bodies[i]->getCCDHandler())
+            m_bodies[i]->getCCDHandler()->PreQuery(false);
+    }
+
+    for(int i=0; i<m_bodies.size(); ++i)
+    {
+        for(int j=i+1; j<m_bodies.size(); ++j)
+        {
+            vector<CollisionInfo*> newcollisions = CDQueries::HashQuery(m_bodies[i]->getCCDHandler(), m_bodies[j]->getCCDHandler(), false);
+            m_collisions.insert(m_collisions.end(), newcollisions.begin(), newcollisions.end());
+        }
+    }
+    for(int i=0;i<m_bodies.size();++i)
+    {
+        if(m_bodies[i]->getCCDHandler())
+            m_bodies[i]->getCCDHandler()->PostQuery();
+    }
+
     for(int iter=0;iter<m_iterations;++iter)
     {
         QTime myTimer, myIterTimer;
         myIterTimer.start();
         myTimer.start();
-
-
-        for(int i=0;i<m_bodies.size();++i)
-        {
-            if(m_bodies[i]->getCCDHandler())
-                m_bodies[i]->getCCDHandler()->PreQuery(false);
-        }
-
-        for(int i=0; i<m_bodies.size(); ++i)
-        {
-            for(int j=i+1; j<m_bodies.size(); ++j)
-            {
-                vector<CollisionInfo*> newcollisions = CDQueries::HashQuery(m_bodies[i]->getCCDHandler(), m_bodies[j]->getCCDHandler(), false);
-                m_collisions.insert(m_collisions.end(), newcollisions.begin(), newcollisions.end());
-            }
-        }
-        for(int i=0;i<m_bodies.size();++i)
-        {
-            if(m_bodies[i]->getCCDHandler())
-                m_bodies[i]->getCCDHandler()->PostQuery();
-        }
 
         m_timeCollisionDetection = myTimer.elapsed();
 
@@ -266,7 +266,8 @@ void Simulator::advanceTime()
 #pragma omp parallel for
         for(int k=0; k<3; ++k)
         {
-            m_cholesky[k].compute(m_Lhs[k]);
+            if(m_collisions.size() > 0)
+                m_cholesky[k].compute(m_Lhs[k]);
             m_q[k] = m_cholesky[k].solve(rhs[k]);
         }
 

@@ -18,7 +18,8 @@ class Viewer : public QGLViewer {
     void testSceneClothConstrainedCorners();
     void testSceneClothDropping();
 //    void testSceneSingleTetra();
-//    void testSceneDeformableSphere();
+    void testSceneDeformableSphere();
+    void testSceneDeformableBlock();
 
 protected:
     virtual void draw();

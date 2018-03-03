@@ -84,12 +84,12 @@ Eigen::MatrixXf TetraConstraint::getBMatrix()
 
 Eigen::SparseMatrix<float> TetraConstraint::getSMatrix(int numParticles, int dim)
 {
-    Eigen::SparseMatrix<float> Si(4, 3*numParticles);
+    Eigen::SparseMatrix<float> Si(4, numParticles);
     vector<Eigen::Triplet<float> > SiData;
-    SiData.push_back(Eigen::Triplet<float> (0, 3*m_vIndex1+dim, 1));
-    SiData.push_back(Eigen::Triplet<float> (1, 3*m_vIndex2+dim, 1));
-    SiData.push_back(Eigen::Triplet<float> (2, 3*m_vIndex3+dim, 1));
-    SiData.push_back(Eigen::Triplet<float> (3, 3*m_vIndex4+dim, 1));
+    SiData.push_back(Eigen::Triplet<float> (0, m_vIndex1, 1));
+    SiData.push_back(Eigen::Triplet<float> (1, m_vIndex2, 1));
+    SiData.push_back(Eigen::Triplet<float> (2, m_vIndex3, 1));
+    SiData.push_back(Eigen::Triplet<float> (3, m_vIndex4, 1));
 
     Si.setFromTriplets(SiData.begin(), SiData.end());
     return Si;

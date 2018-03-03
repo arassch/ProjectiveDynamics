@@ -12,8 +12,6 @@ class SpringConstraint : public ProjectiveConstraint
     int m_vIndex1;
     int m_vIndex2;
 
-
-
 public:
 
     SpringConstraint(float stiffness, Eigen::Vector3f p1, Eigen::Vector3f p2, int vIndex1, int vIndex2);
