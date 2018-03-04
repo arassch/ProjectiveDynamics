@@ -29,6 +29,8 @@ public:
 
     void addPositionConstraint(float stiffness, int vIndex);
 
+    std::vector<PositionConstraint> getPositionConstraints(float stiffness, int vIndex, Eigen::Vector3f &position);
+
     void draw();
 
 };

@@ -24,7 +24,24 @@ class Simulator
 
     vector<ProjectiveBody*> m_bodies;
 
-    vector<CollisionInfo*> m_collisions;
+public:
+    struct Collision
+    {
+        ProjectiveBody* body1;
+        ProjectiveBody* body2;
+        CollisionInfo* info;
+
+        Collision(ProjectiveBody* b1, ProjectiveBody* b2, CollisionInfo* i)
+        {
+            body1 = b1;
+            body2 = b2;
+            info = i;
+        }
+    };
+
+private:
+    vector<Collision> m_collisions;
+    bool m_collisionsInPreviousFrame;
 
 
     float m_dt;
@@ -38,6 +55,7 @@ class Simulator
 
     Eigen::SparseMatrix<float> m_Lhs[3];
     Eigen::SimplicialCholesky<Eigen::SparseMatrix<float> > m_cholesky[3];
+    Eigen::SimplicialCholesky<Eigen::SparseMatrix<float> > m_choleskyInit[3];
 
     int m_timeCollisionDetection;
     int m_timeLocalSolve;
@@ -52,6 +70,7 @@ public:
     Eigen::VectorXf m_sn[3];
 
     std::vector<Eigen::Vector3f> m_projected;
+    std::vector<Eigen::Vector3f> m_projectedCollisions;
     std::vector<ProjectiveConstraint*> m_constraints;
     float m_collisionStiffness;
 
@@ -64,7 +83,7 @@ public:
     void advanceTime();
 
 
-    vector<CollisionInfo *> getCollisions() const { return m_collisions; }
+    vector<Collision> getCollisions() const { return m_collisions; }
 };
 
 #endif // SIMULATOR_H

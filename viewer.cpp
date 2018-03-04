@@ -24,13 +24,14 @@ void Viewer::init()
 
     m_bodies.clear();
 
-//    testSceneClothOnBunny();
+//    testSceneClothOnStaticBody();
 //    testSceneClothConstrainedTopCorners();
 //    testSceneClothConstrainedCorners();
 //    testSceneClothDropping();
 //    testSceneSingleTetra();
-//    testSceneDeformableSphere();
-    testSceneDeformableBlock();
+    testSceneDeformableSphere();
+//    testSceneDeformableBlock();
+//    testSceneDeformableBlockDropping();
 
     m_simulator = new Simulator(m_dt, m_iterations, m_bodies, m_collisionStiffness);
 
@@ -41,8 +42,18 @@ void Viewer::init()
     startAnimation();
 }
 
-void Viewer::testSceneClothOnBunny()
+void Viewer::testSceneClothOnStaticBody()
 {
+    if(!m_init)
+    {
+        m_meshRows = 15;
+        m_meshColumns = 15;
+        m_dt = 0.001;
+        m_iterations = 3;
+
+        m_init = true;
+    }
+
     int rows = m_meshRows;
     int cols = m_meshColumns;
     float meshCellSize = m_meshSize/m_meshRows;
@@ -57,11 +68,16 @@ void Viewer::testSceneClothOnBunny()
     m_bodies.push_back(body);
 
     // static bodies
-    TriMesh *rb = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/bunny.obj", TriMesh::OBJ, 2.0f);
-    rb->Transform(Vector3(0,0.0,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(-1,0,0)));
 
-    StaticBody* bunny = new StaticBody(rb);
-    m_bodies.push_back(bunny);
+    // bunny
+//    TriMesh *rb = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/bunny.obj", TriMesh::OBJ, 2.0f);
+//    rb->Transform(Vector3(0,0.0,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(-1,0,0)));
+
+    //sphere
+    TriMesh *rb = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.2f);
+
+    StaticBody* staticBody = new StaticBody(rb);
+    m_bodies.push_back(staticBody);
 }
 
 void Viewer::testSceneClothConstrainedTopCorners()
@@ -138,62 +154,46 @@ void Viewer::testSceneClothDropping()
 
 }
 
-//void Viewer::testSceneSingleTetra()
-//{
-//    glPointSize(10.0);
-//    glBlendFunc(GL_ONE, GL_ONE);
-
-//    m_hardConstraintsIndices.clear();
-//    m_hardConstraintsPositions.clear();
-//    m_selection.clear();
-//    m_springConstraints.clear();
-//    m_tetraConstraints.clear();
-
-//    TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/tetra.obj", TriMesh::OBJ);
-
-//    m_q.resize(mesh->NumVertices()*3);
-//    m_v.resize(mesh->NumVertices()*3);
-//    m_v.setZero();
-//    for(int i=0; i<mesh->NumVertices(); ++i)
-//    {
-//        m_q[i*3+0] = mesh->Vertices()[i]->Position()[0];
-//        m_q[i*3+1] = mesh->Vertices()[i]->Position()[1];
-//        m_q[i*3+2] = mesh->Vertices()[i]->Position()[2];
-//    }
-
-//    vector<int> tetra;
-//    tetra.push_back(0);
-//    tetra.push_back(1);
-//    tetra.push_back(2);
-//    tetra.push_back(3);
-//    m_tetraConstraints.push_back(tetra);
-
-//    {
-//        addIdToSelection(0);
-//        m_hardConstraintsIndices.push_back(0);
-//        m_hardConstraintsPositions.push_back(toEigenVector3(mesh->Vertices()[0]->Position()));
-//    }
-
-//}
-
 void Viewer::testSceneDeformableSphere()
 {
+    if(!m_init)
+    {
+        m_dt = 0.001;
+        m_iterations = 3;
+
+        m_init = true;
+    }
+
     glPointSize(10.0);
     glBlendFunc(GL_ONE, GL_ONE);
 
     TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ);
-    TetraBody* body = new TetraBody(mesh, m_totalMass, m_tetraStiffness);
+    TetraBody* body = new TetraBody(mesh, m_totalMass, m_tetraStiffness, 3, true);
 
     m_bodies.push_back(body);
+
+    // static bodies
+    TriMesh *rb = TriMesh::CreateBlockMesh(Vector3(-10,-10,-10), Vector3(10, -3, 10));
+
+    StaticBody* floor = new StaticBody(rb);
+    m_bodies.push_back(floor);
 }
 
 void Viewer::testSceneDeformableBlock()
 {
+    if(!m_init)
+    {
+        m_dt = 0.001;
+        m_iterations = 3;
+
+        m_init = true;
+    }
+
     glPointSize(10.0);
     glBlendFunc(GL_ONE, GL_ONE);
 
     TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv.obj", TriMesh::OBJ);
-    TetraBody* body = new TetraBody(mesh, m_totalMass, m_tetraStiffness);
+    TetraBody* body = new TetraBody(mesh, m_totalMass, m_tetraStiffness, 10, true);
 
     LA::Bounds3d bbox(LA::Vector3(-1,-1,-1), LA::Vector3(0.1, 1, 1));
     std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
@@ -202,14 +202,46 @@ void Viewer::testSceneDeformableBlock()
         body->addPositionConstraint(m_positionStiffness, leftVertices[i]->Id());
     }
 
+    m_bodies.push_back(body);
+}
+
+void Viewer::testSceneDeformableBlockDropping()
+{
+    if(!m_init)
+    {
+        m_dt = 0.001;
+        m_iterations = 3;
+        m_collisionStiffness = 10000;
+
+        m_init = true;
+    }
+
+    glPointSize(10.0);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+//    TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv.obj", TriMesh::OBJ);
+//    mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(M_PI/4, Vector3(0,1,1)));
+//    TetraBody* body = new TetraBody(mesh, m_totalMass, m_tetraStiffness, 10, true);
+    TriMesh *mesh = TriMesh::CreateBlockMesh(Vector3(-0.1,-0.1,-0.1), Vector3(0.1, 0.1, 0.1));
+    mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(M_PI/4, Vector3(0,1,1)));
+    TetraBody* body = new TetraBody(mesh, m_totalMass, m_tetraStiffness, 1, true);
 
     m_bodies.push_back(body);
+
+    // static bodies
+    TriMesh *rb = TriMesh::CreateBlockMesh(Vector3(-10,-10,-10), Vector3(10, -0.2, 10));
+
+    StaticBody* floor = new StaticBody(rb);
+    m_bodies.push_back(floor);
 }
 
 void Viewer::draw()
 {
-    for(int i=0;i<m_bodies.size();++i)
-        m_bodies[i]->draw();
+    if(m_drawMeshes)
+    {
+        for(int i=0;i<m_bodies.size();++i)
+            m_bodies[i]->draw();
+    }
 
     glDisable(GL_LIGHTING);
     glPointSize(10);
@@ -224,6 +256,13 @@ void Viewer::draw()
         glVertex3f(p[0], p[1], p[2]);
     }
 
+    glColor3f(1,0,1);
+    for (unsigned i = 0; i < m_simulator->m_projectedCollisions.size(); i++)
+    {
+        Eigen::Vector3f p = m_simulator->m_projectedCollisions[i];
+        glVertex3f(p[0], p[1], p[2]);
+    }
+
     glColor3f(0,1,0);
     for (unsigned i = 0; i < m_simulator->m_sn[0].rows(); i++)
     {
@@ -231,12 +270,13 @@ void Viewer::draw()
     }
 
     glColor3f(1,0,0);
-    vector<CollisionInfo*> collisions = m_simulator->getCollisions();
+    vector<Simulator::Collision> collisions = m_simulator->getCollisions();
     for (unsigned i = 0; i < collisions.size(); i++)
     {
-        LA::Vector3 p = collisions[i]->p;
+        LA::Vector3 p = collisions[i].info->p;
         glVertex3f(p[0], p[1], p[2]);
     }
+
 
     glEnd();
 
@@ -525,6 +565,7 @@ Viewer::Viewer(QWidget *parent) : QGLViewer(parent)
     m_selectionMode = NONE;
     m_move = false;
 
+    m_drawMeshes = true;
     m_meshRows = 10;
     m_meshColumns = 10;
     m_meshSize = 1;
@@ -550,6 +591,11 @@ void Viewer::reset()
     delete(m_simulator);
 
     init();
+}
+
+void Viewer::changeDrawMeshes(int val)
+{
+    m_drawMeshes = val;
 }
 
 void Viewer::changeMeshRows(int val)
@@ -603,4 +649,5 @@ void Viewer::changeCollisionStiffness(double val)
     if(m_simulator)
         m_simulator->m_collisionStiffness = val;
 }
+
 

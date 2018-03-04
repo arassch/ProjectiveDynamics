@@ -29,6 +29,11 @@ public:
     ViewerInterface()
     {
         setupUi(this);
+    }
+
+    void updateVariables()
+    {
+        drawMeshesCheck->setChecked(viewer->m_drawMeshes);
         meshRows->setValue(viewer->m_meshRows);
         meshColumns->setValue(viewer->m_meshColumns);
         meshSize->setValue(viewer->m_meshSize);
@@ -40,8 +45,6 @@ public:
         positionStiffness->setValue(viewer->m_positionStiffness);
     }
 
-
-
 };
 
 int main(int argc, char **argv) {
@@ -51,10 +54,11 @@ int main(int argc, char **argv) {
     ViewerInterface vi;
 
 
-    vi.setWindowTitle("interface");
+    vi.setWindowTitle("Projective Dynamics");
 
     vi.show();
-    vi.show();
+    vi.updateVariables();
+
 
     return application.exec();
 }

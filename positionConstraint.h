@@ -16,6 +16,8 @@ public:
 
     PositionConstraint(float stiffness, Eigen::Vector3f p, int vIndex);
 
+    PositionConstraint(const PositionConstraint &);
+
     void project(std::vector<Eigen::Vector3f> q, std::vector<Eigen::Vector3f>& p);
     void project(Eigen::Vector3f q, Eigen::Vector3f& p);
 

@@ -5,10 +5,10 @@
 
 
 
-TetraBody::TetraBody(TriMesh *mesh, float particleMass, float tetraStiffness)
+TetraBody::TetraBody(TriMesh *mesh, float particleMass, float tetraStiffness, int numTetras, bool deleteExtraTetras)
     : ProjectiveBody(particleMass), m_mesh(mesh)
 {
-    m_tetraMesh = TetraMesh::CreateEmbeddingMesh(10, mesh, false);
+    m_tetraMesh = TetraMesh::CreateEmbeddingMesh(numTetras, mesh, deleteExtraTetras);
     m_mesh = m_tetraMesh->LinkTriMesh(mesh);
 
     m_numParticles = m_tetraMesh->numVertices();
@@ -55,6 +55,8 @@ void TetraBody::setPositions(const Eigen::VectorXf &qx, const Eigen::VectorXf &q
     {
         Vertex* v = &(m_tetraMesh->getVertex()[i]);
         v->setPosition(LA::Vector3(qx[i], qy[i], qz[i]));
+
+//        std::cout << "New positions " << i << ": " << qx[i] << " " << qy[i] << " " << qz[i] << std::endl;
     }
     m_mesh->ComputePositions();
 }
@@ -81,6 +83,31 @@ void TetraBody::addPositionConstraint(float stiffness, int vIndex)
         PositionConstraint *c = new PositionConstraint(stiffness, p, index);
         m_positionConstraints.push_back(c);
     }
+}
+
+std::vector<PositionConstraint> TetraBody::getPositionConstraints(float stiffness, int vIndex, Eigen::Vector3f &position)
+{
+    std::vector<PositionConstraint> constraints;
+
+    TriVertex *v = m_mesh->Vertices()[vIndex];
+    linearinterpolationlib::LinearInterpolation* inter = dynamic_cast<linearinterpolationlib::LinearInterpolation*>(v->GetInterpolation());
+    LA::Vector4 weights = inter->weights;
+    Eigen::Vector3f offset = position - toEigenVector3(v->Position());
+
+//    std::cout << "Collision position: " << position.transpose() << std::endl;
+
+    Vertex* nodes = m_tetraMesh->getVertex();
+    for(int i=0; i<4; ++i)
+    {
+        int index = inter->tet->_vertex[i]->_id;
+        Eigen::Vector3f pold = toEigenVector3(nodes[index].getPosition());
+        Eigen::Vector3f p = pold + offset*weights[i];
+        constraints.push_back(PositionConstraint(stiffness/4, p, index));
+
+//        std::cout << "\t" << index << ":" << pold.transpose() << " --> " << p.transpose() << std::endl;
+    }
+
+    return constraints;
 }
 
 void TetraBody::draw()

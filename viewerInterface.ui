@@ -60,6 +60,16 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="drawMeshesCheck">
+       <property name="text">
+        <string>Meshes</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -342,6 +352,7 @@
     <slot>changeSpringStiffness(double)</slot>
     <slot>reset()</slot>
     <slot>changePositionStiffness(double)</slot>
+    <slot>changeDrawMeshes(int)</slot>
    </slots>
   </customwidget>
  </customwidgets>
@@ -600,6 +611,22 @@
     <hint type="destinationlabel">
      <x>424</x>
      <y>139</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>drawMeshesCheck</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>viewer</receiver>
+   <slot>changeDrawMeshes(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>198</x>
+     <y>668</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>499</x>
+     <y>323</y>
     </hint>
    </hints>
   </connection>

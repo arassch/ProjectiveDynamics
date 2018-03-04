@@ -29,7 +29,8 @@ HEADERS  = \
     projectiveBody.h \
     staticBody.h \
     projectiveConstraint.h \
-    tetraBody.h
+    tetraBody.h \
+    collisionConstraint.h
 SOURCES  = main.cpp \
     viewer.cpp \
     springConstraint.cpp \
@@ -38,7 +39,8 @@ SOURCES  = main.cpp \
     positionConstraint.cpp \
     tetraConstraint.cpp \
     springBody.cpp \
-    tetraBody.cpp
+    tetraBody.cpp \
+    collisionConstraint.cpp
 
 FORMS *= viewerInterface.ui
 

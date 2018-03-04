@@ -46,6 +46,12 @@ public:
 
     }
 
+    std::vector<PositionConstraint> getPositionConstraints(float stiffness, int vIndex, Eigen::Vector3f &position)
+    {
+        std::vector<PositionConstraint> constraints;
+        return constraints;
+    }
+
     void draw()
     {
         m_mesh->Draw();

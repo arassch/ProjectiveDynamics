@@ -75,6 +75,7 @@ void SpringBody::setPositions(const Eigen::VectorXf &qx, const Eigen::VectorXf &
         m_mesh->Vertices()[i]->UpdatePositionOld();
         m_mesh->Vertices()[i]->Position(qx[i], qy[i], qz[i]);
     }
+    m_mesh->ComputeFaceNormals();
 }
 
 std::vector<ProjectiveConstraint *> SpringBody::getConstraints()
@@ -90,6 +91,13 @@ void SpringBody::addPositionConstraint(float stiffness, int vIndex)
     Eigen::Vector3f p = toEigenVector3(m_mesh->Vertices()[vIndex]->Position());
     PositionConstraint *c = new PositionConstraint(stiffness, p, vIndex);
     m_positionConstraints.push_back(c);
+}
+
+std::vector<PositionConstraint> SpringBody::getPositionConstraints(float stiffness, int vIndex, Eigen::Vector3f &position)
+{
+    std::vector<PositionConstraint> constraints;
+    constraints.push_back(PositionConstraint(stiffness, position, vIndex));
+    return constraints;
 }
 
 void SpringBody::draw()

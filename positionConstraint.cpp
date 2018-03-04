@@ -9,6 +9,13 @@ PositionConstraint::PositionConstraint(float stiffness, Eigen::Vector3f p, int v
     m_vIndex = vIndex;
 }
 
+PositionConstraint::PositionConstraint(const PositionConstraint &c)
+    : ProjectiveConstraint(c.m_stiffness, 1)
+{
+    m_position = c.m_position;
+    m_vIndex = c.m_vIndex;
+}
+
 void PositionConstraint::project(std::vector<Eigen::Vector3f> q, std::vector<Eigen::Vector3f> &p)
 {
     p.resize(1);

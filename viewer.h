@@ -10,16 +10,19 @@
 
 #include "simulator.h"
 
+
 class Viewer : public QGLViewer {
     Q_OBJECT
 
-    void testSceneClothOnBunny();
+    bool m_init;
+    void testSceneClothOnStaticBody();
     void testSceneClothConstrainedTopCorners();
     void testSceneClothConstrainedCorners();
     void testSceneClothDropping();
 //    void testSceneSingleTetra();
     void testSceneDeformableSphere();
     void testSceneDeformableBlock();
+    void testSceneDeformableBlockDropping();
 
 protected:
     virtual void draw();
@@ -41,6 +44,7 @@ protected:
 public:
     Viewer(QWidget *parent);
 
+    bool m_drawMeshes;
     int m_meshRows, m_meshColumns;
     double m_meshSize;
     float m_dt;
@@ -74,9 +78,11 @@ private:
     bool m_move;
     QPoint m_initialPoint;
 
+
 public Q_SLOTS:
     void reset();
 
+    void changeDrawMeshes(int val);
     void changeMeshRows(int val);
     void changeMeshCols(int val);
     void changeSize(double size);

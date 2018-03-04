@@ -5,6 +5,8 @@
 
 #include <HashCCDHandler.h>
 
+#include "positionConstraint.h"
+
 class ProjectiveBody
 {
 protected:
@@ -38,6 +40,8 @@ public:
     virtual std::vector<ProjectiveConstraint *> getConstraints() = 0;
 
     virtual void addPositionConstraint(float stiffness, int vIndex) = 0;
+
+    virtual std::vector<PositionConstraint> getPositionConstraints(float stiffness, int vIndex, Eigen::Vector3f &position) = 0;
 
     virtual void draw() = 0;
 };

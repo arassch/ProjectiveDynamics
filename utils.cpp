@@ -1,5 +1,12 @@
 #include "utils.h"
 
+LA::Vector3 toLAVector3(const Eigen::Vector3f &v)
+{
+    LA::Vector3 r(v[0], v[1], v[2]);
+    return r;
+}
+
+
 Eigen::Vector3f toEigenVector3(const LA::Vector3 &v)
 {
     Eigen::Vector3f r(v[0], v[1], v[2]);
@@ -25,4 +32,5 @@ float clamp(float value, float min, float max)
     res = std::max(res, min);
     return res;
 }
+
 

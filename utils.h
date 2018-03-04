@@ -5,6 +5,8 @@
 #include <Eigen/Core>
 #include "Vector3.h"
 
+LA::Vector3 toLAVector3(const Eigen::Vector3f &v);
+
 Eigen::Vector3f toEigenVector3(const LA::Vector3 &v);
 
 Eigen::Vector3f toEigenVector3(Eigen::VectorXf &v, int index);
