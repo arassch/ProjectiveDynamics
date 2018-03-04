@@ -23,7 +23,8 @@ public:
     float m_minSigma;
     float m_maxSigma;
 
-    TetraConstraint(float stiffness,
+    TetraConstraint(ProjectiveBody *body,
+                    float stiffness,
                     Eigen::Vector3f p1,
                     Eigen::Vector3f p2,
                     Eigen::Vector3f p3,
@@ -37,7 +38,7 @@ public:
 
     Eigen::MatrixXf getAMatrix();
     Eigen::MatrixXf getBMatrix();
-    Eigen::SparseMatrix<float> getSMatrix(int numParticles, int dim);
+    Eigen::SparseMatrix<float> getSMatrix(int numParticles, int bodyIndex, int dim);
 
     int getVIndex(int index);
 

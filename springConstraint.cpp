@@ -2,8 +2,8 @@
 
 using namespace std;
 
-SpringConstraint::SpringConstraint(float stiffness, Eigen::Vector3f p1, Eigen::Vector3f p2, int vIndex1, int vIndex2) :
-    ProjectiveConstraint(stiffness, 2), m_vIndex1(vIndex1), m_vIndex2(vIndex2)
+SpringConstraint::SpringConstraint(ProjectiveBody *body, float stiffness, Eigen::Vector3f p1, Eigen::Vector3f p2, int vIndex1, int vIndex2) :
+    ProjectiveConstraint(body, stiffness, 2), m_vIndex1(vIndex1), m_vIndex2(vIndex2)
 {
     m_restLength = (p1-p2).norm();
 
@@ -38,12 +38,12 @@ Eigen::MatrixXf SpringConstraint::getBMatrix()
     return getAMatrix();
 }
 
-Eigen::SparseMatrix<float> SpringConstraint::getSMatrix(int numParticles, int dim)
+Eigen::SparseMatrix<float> SpringConstraint::getSMatrix(int numParticles, int bodyIndex, int dim)
 {
     Eigen::SparseMatrix<float> Si(2, numParticles);
     vector<Eigen::Triplet<float> > SiData;
-    SiData.push_back(Eigen::Triplet<float> (0, m_vIndex1, 1));
-    SiData.push_back(Eigen::Triplet<float> (1, m_vIndex2, 1));
+    SiData.push_back(Eigen::Triplet<float> (0, bodyIndex + m_vIndex1, 1));
+    SiData.push_back(Eigen::Triplet<float> (1, bodyIndex + m_vIndex2, 1));
 
     Si.setFromTriplets(SiData.begin(), SiData.end());
     return Si;

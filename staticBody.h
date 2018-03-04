@@ -12,8 +12,8 @@ class StaticBody : public ProjectiveBody
     TriMesh* m_mesh;
 
 public:
-    StaticBody(TriMesh* mesh)
-        : ProjectiveBody(0), m_mesh(mesh)
+    StaticBody(TriMesh* mesh, std::string name)
+        : ProjectiveBody(name, 0), m_mesh(mesh)
     {
         m_CCDHandler = new HashCCDHandler(m_mesh);
         m_CCDHandler->Init();
@@ -31,6 +31,12 @@ public:
     {
         Eigen::VectorXf pos(0);
         return pos;
+    }
+
+    Eigen::VectorXf getVelocities(float dt)
+    {
+        Eigen::VectorXf vel(0);
+        return vel;
     }
 
     void setPositions(const Eigen::VectorXf &qx, const Eigen::VectorXf &qy, const Eigen::VectorXf &qz) {}

@@ -2,8 +2,8 @@
 #include "tetraConstraint.h"
 #include "utils.h"
 
-TetraConstraint::TetraConstraint(float stiffness, Eigen::Vector3f p1, Eigen::Vector3f p2, Eigen::Vector3f p3, Eigen::Vector3f p4, int vIndex1, int vIndex2, int vIndex3, int vIndex4)
-    : ProjectiveConstraint(stiffness, 4), m_vIndex1(vIndex1), m_vIndex2(vIndex2), m_vIndex3(vIndex3), m_vIndex4(vIndex4)
+TetraConstraint::TetraConstraint(ProjectiveBody *body, float stiffness, Eigen::Vector3f p1, Eigen::Vector3f p2, Eigen::Vector3f p3, Eigen::Vector3f p4, int vIndex1, int vIndex2, int vIndex3, int vIndex4)
+    : ProjectiveConstraint(body, stiffness, 4), m_vIndex1(vIndex1), m_vIndex2(vIndex2), m_vIndex3(vIndex3), m_vIndex4(vIndex4)
 {
     m_Dm.col(0) = p4 - p1;
     m_Dm.col(1) = p4 - p2;
@@ -82,14 +82,14 @@ Eigen::MatrixXf TetraConstraint::getBMatrix()
     return getAMatrix();
 }
 
-Eigen::SparseMatrix<float> TetraConstraint::getSMatrix(int numParticles, int dim)
+Eigen::SparseMatrix<float> TetraConstraint::getSMatrix(int numParticles, int bodyIndex, int dim)
 {
     Eigen::SparseMatrix<float> Si(4, numParticles);
     vector<Eigen::Triplet<float> > SiData;
-    SiData.push_back(Eigen::Triplet<float> (0, m_vIndex1, 1));
-    SiData.push_back(Eigen::Triplet<float> (1, m_vIndex2, 1));
-    SiData.push_back(Eigen::Triplet<float> (2, m_vIndex3, 1));
-    SiData.push_back(Eigen::Triplet<float> (3, m_vIndex4, 1));
+    SiData.push_back(Eigen::Triplet<float> (0, bodyIndex + m_vIndex1, 1));
+    SiData.push_back(Eigen::Triplet<float> (1, bodyIndex + m_vIndex2, 1));
+    SiData.push_back(Eigen::Triplet<float> (2, bodyIndex + m_vIndex3, 1));
+    SiData.push_back(Eigen::Triplet<float> (3, bodyIndex + m_vIndex4, 1));
 
     Si.setFromTriplets(SiData.begin(), SiData.end());
     return Si;

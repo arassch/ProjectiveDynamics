@@ -5,11 +5,14 @@
 
 #include <HashCCDHandler.h>
 
-#include "positionConstraint.h"
+class ProjectiveConstraint;
+class PositionConstraint;
 
 class ProjectiveBody
 {
 protected:
+
+    std::string m_name;
 
     int m_numParticles;
 
@@ -19,7 +22,9 @@ protected:
 
 public:
 
-    ProjectiveBody(float totalMass) : m_totalMass(totalMass), m_CCDHandler(0) {}
+    ProjectiveBody(std::string name, float totalMass) : m_name(name), m_totalMass(totalMass), m_CCDHandler(0) {}
+
+    std::string getName() { return m_name; }
 
     int getNumParticles() { return m_numParticles; }
 
@@ -34,6 +39,8 @@ public:
     HashCCDHandler* getCCDHandler() { return m_CCDHandler; }
 
     virtual Eigen::VectorXf getPositions() = 0;
+
+    virtual Eigen::VectorXf getVelocities(float dt) = 0;
 
     virtual void setPositions(const Eigen::VectorXf &qx, const Eigen::VectorXf &qy, const Eigen::VectorXf &qz) = 0;
 

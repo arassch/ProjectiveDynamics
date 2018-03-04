@@ -1,8 +1,8 @@
 #include "springBody.h"
 #include "utils.h"
 
-SpringBody::SpringBody(TriMesh *mesh, float totalMass, float springStiffness, bool addExtraSprings, float maxDistance)
-    : ProjectiveBody(totalMass), m_mesh(mesh)
+SpringBody::SpringBody(TriMesh *mesh, std::string name, float totalMass, float springStiffness, bool addExtraSprings, float maxDistance)
+    : ProjectiveBody(name, totalMass), m_mesh(mesh)
 {
     m_numParticles = m_mesh->NumVertices();
 
@@ -16,7 +16,7 @@ SpringBody::SpringBody(TriMesh *mesh, float totalMass, float springStiffness, bo
         Eigen::Vector3f p1 = toEigenVector3(m_mesh->Vertices()[v1]->Position());
         Eigen::Vector3f p2 = toEigenVector3(m_mesh->Vertices()[v2]->Position());
 
-        SpringConstraint *c = new SpringConstraint(springStiffness, p1, p2, v1, v2);
+        SpringConstraint *c = new SpringConstraint(this, springStiffness, p1, p2, v1, v2);
         m_springConstraints.push_back(c);
 
         if(addExtraSprings)
@@ -44,7 +44,7 @@ SpringBody::SpringBody(TriMesh *mesh, float totalMass, float springStiffness, bo
                 Eigen::Vector3f p1 = toEigenVector3(v1p);
                 Eigen::Vector3f p2 = toEigenVector3(v2p);
 
-                SpringConstraint *c = new SpringConstraint(springStiffness, p1, p2, v1, v2);
+                SpringConstraint *c = new SpringConstraint(this, springStiffness, p1, p2, v1, v2);
                 m_springConstraints.push_back(c);
             }
         }
@@ -68,6 +68,20 @@ Eigen::VectorXf SpringBody::getPositions()
     return q;
 }
 
+Eigen::VectorXf SpringBody::getVelocities(float dt)
+{
+    Eigen::VectorXf v;
+    v.resize(m_mesh->NumVertices()*3);
+    for(int i=0; i<m_mesh->NumVertices(); ++i)
+    {
+        LA::Vector3 cv = (1/dt) * (m_mesh->Vertices()[i]->Position() - m_mesh->Vertices()[i]->PositionOld());
+        v[i*3+0] = cv[0];
+        v[i*3+1] = cv[1];
+        v[i*3+2] = cv[2];
+    }
+    return v;
+}
+
 void SpringBody::setPositions(const Eigen::VectorXf &qx, const Eigen::VectorXf &qy, const Eigen::VectorXf &qz)
 {
     for(int i=0; i<m_mesh->NumVertices(); ++i)
@@ -89,14 +103,14 @@ std::vector<ProjectiveConstraint *> SpringBody::getConstraints()
 void SpringBody::addPositionConstraint(float stiffness, int vIndex)
 {
     Eigen::Vector3f p = toEigenVector3(m_mesh->Vertices()[vIndex]->Position());
-    PositionConstraint *c = new PositionConstraint(stiffness, p, vIndex);
+    PositionConstraint *c = new PositionConstraint(this, stiffness, p, vIndex);
     m_positionConstraints.push_back(c);
 }
 
 std::vector<PositionConstraint> SpringBody::getPositionConstraints(float stiffness, int vIndex, Eigen::Vector3f &position)
 {
     std::vector<PositionConstraint> constraints;
-    constraints.push_back(PositionConstraint(stiffness, position, vIndex));
+    constraints.push_back(PositionConstraint(this, stiffness, position, vIndex));
     return constraints;
 }
 

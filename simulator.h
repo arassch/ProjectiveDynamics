@@ -19,12 +19,13 @@
 
 class Simulator
 {
-
+public:
     int m_numParticles;
 
     vector<ProjectiveBody*> m_bodies;
+    map<ProjectiveBody*, int> m_bodyToIndex;
 
-public:
+
     struct Collision
     {
         ProjectiveBody* body1;
@@ -39,7 +40,6 @@ public:
         }
     };
 
-private:
     vector<Collision> m_collisions;
     bool m_collisionsInPreviousFrame;
 
@@ -55,14 +55,12 @@ private:
 
     Eigen::SparseMatrix<float> m_Lhs[3];
     Eigen::SimplicialCholesky<Eigen::SparseMatrix<float> > m_cholesky[3];
-    Eigen::SimplicialCholesky<Eigen::SparseMatrix<float> > m_choleskyInit[3];
 
     int m_timeCollisionDetection;
     int m_timeLocalSolve;
     int m_timeGlobalSolve;
 
 
-public:
 
     Eigen::VectorXf m_q[3];
     Eigen::VectorXf m_v[3];

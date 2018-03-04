@@ -4,19 +4,23 @@
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 
+#include "projectiveBody.h"
+
 class ProjectiveConstraint
 {
 public:
     float m_stiffness;
     int m_numParticles;
 
-    ProjectiveConstraint(float stiffness, int numParticles)
-        : m_stiffness(stiffness), m_numParticles(numParticles)
+    ProjectiveBody *m_body;
+
+    ProjectiveConstraint(ProjectiveBody* body, float stiffness, int numParticles)
+        : m_body(body), m_stiffness(stiffness), m_numParticles(numParticles)
     {}
 
     virtual Eigen::MatrixXf getAMatrix() = 0;
     virtual Eigen::MatrixXf getBMatrix() = 0;
-    virtual Eigen::SparseMatrix<float> getSMatrix(int numParticles, int dim) = 0;
+    virtual Eigen::SparseMatrix<float> getSMatrix(int numParticles, int bodyIndex, int dim) = 0;
 
     virtual int getVIndex(int index) = 0;
 

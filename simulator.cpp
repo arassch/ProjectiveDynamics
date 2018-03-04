@@ -27,35 +27,52 @@ void Simulator::initialize(float dt, int iterations, vector<ProjectiveBody*> &bo
     m_constraints.clear();
     m_bodies.clear();
 
+    int totalNumParticles = 0;
     for(int i=0; i<bodies.size(); ++i)
     {
         m_bodies.push_back(bodies[i]);
+        m_bodyToIndex[bodies[i]] = totalNumParticles;
+        totalNumParticles += bodies[i]->getNumParticles();
+    }
 
+    for(auto it = m_bodyToIndex.begin(); it!=m_bodyToIndex.end(); ++it)
+    {
+        std::cout << it->first << " " << it->second << std::endl;
+    }
+
+    m_q[0].resize(totalNumParticles);
+    m_q[1].resize(totalNumParticles);
+    m_q[2].resize(totalNumParticles);
+    m_v[0].resize(totalNumParticles);
+    m_v[1].resize(totalNumParticles);
+    m_v[2].resize(totalNumParticles);
+    m_particleMass.resize(totalNumParticles);
+
+    for(int i=0; i<bodies.size(); ++i)
+    {
+        int bodyIndex = m_bodyToIndex[bodies[i]];
         if(bodies[i]->getNumParticles() > 0)
         {
-            m_q[0].resize(m_q[0].rows()+bodies[i]->getNumParticles());
-            m_q[1].resize(m_q[1].rows()+bodies[i]->getNumParticles());
-            m_q[2].resize(m_q[2].rows()+bodies[i]->getNumParticles());
-            m_particleMass.resize(m_particleMass.rows()+bodies[i]->getNumParticles());
             Eigen::VectorXf pos = bodies[i]->getPositions();
+            Eigen::VectorXf vel = bodies[i]->getVelocities(m_dt);
             for(int j=0; j<pos.rows()/3; ++j)
             {
-                m_q[0][j] = pos[j*3+0];
-                m_q[1][j] = pos[j*3+1];
-                m_q[2][j] = pos[j*3+2];
+                m_q[0][bodyIndex+j] = pos[j*3+0];
+                m_q[1][bodyIndex+j] = pos[j*3+1];
+                m_q[2][bodyIndex+j] = pos[j*3+2];
             }
-            m_particleMass << bodies[i]->getParticleMassVector();
+            for(int j=0; j<vel.rows()/3; ++j)
+            {
+                m_v[0][bodyIndex+j] = vel[j*3+0];
+                m_v[1][bodyIndex+j] = vel[j*3+1];
+                m_v[2][bodyIndex+j] = vel[j*3+2];
+            }
+            m_particleMass.segment(m_bodyToIndex[bodies[i]], bodies[i]->getNumParticles()) = bodies[i]->getParticleMassVector();
             std::vector<ProjectiveConstraint*> constraints = bodies[i]->getConstraints();
             m_constraints.insert(m_constraints.end(), constraints.begin(), constraints.end());
         }
-    }
 
-    m_v[0].resize(m_q[0].rows());
-    m_v[0].setZero();
-    m_v[1].resize(m_q[1].rows());
-    m_v[1].setZero();
-    m_v[2].resize(m_q[2].rows());
-    m_v[2].setZero();
+    }
 
     m_numParticles = m_q[0].rows();
 
@@ -71,9 +88,9 @@ void Simulator::initialize(float dt, int iterations, vector<ProjectiveBody*> &bo
         ProjectiveConstraint* c = m_constraints[i];
         Eigen::MatrixXf Ai = c->getAMatrix();
 
-        Eigen::SparseMatrix<float> SiX = c->getSMatrix(m_numParticles, 0);
-        Eigen::SparseMatrix<float> SiY = c->getSMatrix(m_numParticles, 1);
-        Eigen::SparseMatrix<float> SiZ = c->getSMatrix(m_numParticles, 2);
+        Eigen::SparseMatrix<float> SiX = c->getSMatrix(m_numParticles, m_bodyToIndex[c->m_body], 0);
+        Eigen::SparseMatrix<float> SiY = c->getSMatrix(m_numParticles, m_bodyToIndex[c->m_body], 1);
+        Eigen::SparseMatrix<float> SiZ = c->getSMatrix(m_numParticles, m_bodyToIndex[c->m_body], 2);
 
         m_Lhs[0] = m_Lhs[0] + c->m_stiffness * SiX.transpose() * Ai.transpose() * Ai * SiX;
         m_Lhs[1] = m_Lhs[1] + c->m_stiffness * SiY.transpose() * Ai.transpose() * Ai * SiY;
@@ -84,11 +101,6 @@ void Simulator::initialize(float dt, int iterations, vector<ProjectiveBody*> &bo
     m_cholesky[0].compute(m_Lhs[0]);
     m_cholesky[1].compute(m_Lhs[1]);
     m_cholesky[2].compute(m_Lhs[2]);
-
-    m_choleskyInit[0].compute(m_Lhs[0]);
-    m_choleskyInit[1].compute(m_Lhs[1]);
-    m_choleskyInit[2].compute(m_Lhs[2]);
-
 
     m_fext[0].resize(m_numParticles);
     m_fext[0].setZero();
@@ -177,7 +189,7 @@ void Simulator::advanceTime()
             std::vector<Eigen::Vector3f> q, p;
             for(int j=0; j<c->m_numParticles; ++j)
             {
-                Eigen::Vector3f qpos = toEigenVector3(m_q[0], m_q[1], m_q[2], c->getVIndex(j));
+                Eigen::Vector3f qpos = toEigenVector3(m_q[0], m_q[1], m_q[2], m_bodyToIndex[c->m_body] + c->getVIndex(j));
                 q.push_back(qpos);
             }
 
@@ -188,9 +200,9 @@ void Simulator::advanceTime()
             Eigen::MatrixXf Ai = c->getAMatrix();
             Eigen::MatrixXf Bi = c->getBMatrix();
 
-            Eigen::SparseMatrix<float> SiX = c->getSMatrix(m_numParticles, 0);
-            Eigen::SparseMatrix<float> SiY = c->getSMatrix(m_numParticles, 1);
-            Eigen::SparseMatrix<float> SiZ = c->getSMatrix(m_numParticles, 2);
+            Eigen::SparseMatrix<float> SiX = c->getSMatrix(m_numParticles, m_bodyToIndex[c->m_body], 0);
+            Eigen::SparseMatrix<float> SiY = c->getSMatrix(m_numParticles, m_bodyToIndex[c->m_body], 1);
+            Eigen::SparseMatrix<float> SiZ = c->getSMatrix(m_numParticles, m_bodyToIndex[c->m_body], 2);
 
 
             std::vector<Eigen::VectorXf> pdim(3);
@@ -229,6 +241,9 @@ void Simulator::advanceTime()
                 continue;
             col->n.normalize();
             LA::Vector3 p_projLA = col->v->Position() - Vector3::dotProd(col->v->Position() - col->p, col->n) * col->n;
+            if(LA::Vector3::dotProd((p_projLA - col->v->Position()), col->n) < 0)
+                continue;
+
             Eigen::Vector3f p_proj = toEigenVector3(p_projLA);
 
             std::vector<PositionConstraint> constraints = m_collisions[i].body1->getPositionConstraints(m_collisionStiffness, col->v->Id(), p_proj);
@@ -242,9 +257,10 @@ void Simulator::advanceTime()
 
                 Eigen::MatrixXf Ai = constraints[j].getAMatrix();
                 Eigen::MatrixXf Bi = constraints[j].getBMatrix();
-                Eigen::SparseMatrix<float> SiX = constraints[j].getSMatrix(m_numParticles, 0);
-                Eigen::SparseMatrix<float> SiY = constraints[j].getSMatrix(m_numParticles, 1);
-                Eigen::SparseMatrix<float> SiZ = constraints[j].getSMatrix(m_numParticles, 2);
+                int bodyIndex = m_bodyToIndex[constraints[j].m_body];
+                Eigen::SparseMatrix<float> SiX = constraints[j].getSMatrix(m_numParticles, bodyIndex, 0);
+                Eigen::SparseMatrix<float> SiY = constraints[j].getSMatrix(m_numParticles, bodyIndex, 1);
+                Eigen::SparseMatrix<float> SiZ = constraints[j].getSMatrix(m_numParticles, bodyIndex, 2);
 
 
     #pragma omp critical
@@ -285,7 +301,6 @@ void Simulator::advanceTime()
                 m_collisionsInPreviousFrame = false;
         }
 
-
 #pragma omp parallel for
         for(int k=0; k<3; ++k)
             m_q[k] = m_cholesky[k].solve(rhs[k]);
@@ -305,12 +320,11 @@ void Simulator::advanceTime()
 
 
 
-        int index=0;
         for(int i=0; i<m_bodies.size(); ++i)
         {
             int numParticles = m_bodies[i]->getNumParticles();
-            m_bodies[i]->setPositions(m_q[0].segment(index,numParticles), m_q[1].segment(index,numParticles), m_q[2].segment(index,numParticles));
-            index += numParticles;
+            int bodyIndex = m_bodyToIndex[m_bodies[i]];
+            m_bodies[i]->setPositions(m_q[0].segment(bodyIndex,numParticles), m_q[1].segment(bodyIndex,numParticles), m_q[2].segment(bodyIndex,numParticles));
         }
 
 

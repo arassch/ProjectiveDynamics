@@ -5,13 +5,17 @@
 
 
 
-TetraBody::TetraBody(TriMesh *mesh, float particleMass, float tetraStiffness, int numTetras, bool deleteExtraTetras)
-    : ProjectiveBody(particleMass), m_mesh(mesh)
+TetraBody::TetraBody(TriMesh *mesh, std::string name, float totalMass, float tetraStiffness, int numTetras, bool deleteExtraTetras)
+    : ProjectiveBody(name, totalMass), m_mesh(mesh)
 {
     m_tetraMesh = TetraMesh::CreateEmbeddingMesh(numTetras, mesh, deleteExtraTetras);
     m_mesh = m_tetraMesh->LinkTriMesh(mesh);
 
     m_numParticles = m_tetraMesh->numVertices();
+    for(int i=0; i<m_numParticles; ++i)
+    {
+        m_tetraMesh->getVertex()[i]._velocity.set(0,0,0);
+    }
 
     m_tetraConstraints.clear();
     for(int i=0;i<m_tetraMesh->numTetras();++i)
@@ -27,8 +31,7 @@ TetraBody::TetraBody(TriMesh *mesh, float particleMass, float tetraStiffness, in
         Eigen::Vector3f p3 = toEigenVector3(v3->getPosition());
         Eigen::Vector3f p4 = toEigenVector3(v4->getPosition());
 
-
-        TetraConstraint *c = new TetraConstraint(tetraStiffness, p1, p2, p3, p4, v1->_id, v2->_id, v3->_id, v4->_id);
+        TetraConstraint *c = new TetraConstraint(this, tetraStiffness, p1, p2, p3, p4, v1->_id, v2->_id, v3->_id, v4->_id);
         m_tetraConstraints.push_back(c);
     }
 
@@ -47,6 +50,20 @@ Eigen::VectorXf TetraBody::getPositions()
         q[i*3+2] = m_tetraMesh->getVertex()[i].getPosition()[2];
     }
     return q;
+}
+
+Eigen::VectorXf TetraBody::getVelocities(float dt)
+{
+    Eigen::VectorXf v;
+    v.resize(m_numParticles*3);
+    for(int i=0; i<m_numParticles; ++i)
+    {
+        LA::Vector3 cv = m_tetraMesh->getVertex()[i].getVelocity();
+        v[i*3+0] = cv[0];
+        v[i*3+1] = cv[1];
+        v[i*3+2] = cv[2];
+    }
+    return v;
 }
 
 void TetraBody::setPositions(const Eigen::VectorXf &qx, const Eigen::VectorXf &qy, const Eigen::VectorXf &qz)
@@ -80,7 +97,7 @@ void TetraBody::addPositionConstraint(float stiffness, int vIndex)
     {
         int index = inter->tet->_vertex[i]->_id;
         Eigen::Vector3f p = toEigenVector3(nodes[index].getPosition());
-        PositionConstraint *c = new PositionConstraint(stiffness, p, index);
+        PositionConstraint *c = new PositionConstraint(this, stiffness/4, p, index);
         m_positionConstraints.push_back(c);
     }
 }
@@ -102,7 +119,7 @@ std::vector<PositionConstraint> TetraBody::getPositionConstraints(float stiffnes
         int index = inter->tet->_vertex[i]->_id;
         Eigen::Vector3f pold = toEigenVector3(nodes[index].getPosition());
         Eigen::Vector3f p = pold + offset*weights[i];
-        constraints.push_back(PositionConstraint(stiffness/4, p, index));
+        constraints.push_back(PositionConstraint(this, stiffness/4, p, index));
 
 //        std::cout << "\t" << index << ":" << pold.transpose() << " --> " << p.transpose() << std::endl;
     }

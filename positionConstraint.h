@@ -14,7 +14,7 @@ class PositionConstraint : public ProjectiveConstraint
 public:
 
 
-    PositionConstraint(float stiffness, Eigen::Vector3f p, int vIndex);
+    PositionConstraint(ProjectiveBody* body, float stiffness, Eigen::Vector3f p, int vIndex);
 
     PositionConstraint(const PositionConstraint &);
 
@@ -23,7 +23,7 @@ public:
 
     Eigen::MatrixXf getAMatrix();
     Eigen::MatrixXf getBMatrix();
-    Eigen::SparseMatrix<float> getSMatrix(int numParticles, int dim);
+    Eigen::SparseMatrix<float> getSMatrix(int numParticles, int bodyIndex, int dim);
 
     int getVIndex(int index) { return m_vIndex; }
 
