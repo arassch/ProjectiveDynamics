@@ -5,8 +5,8 @@
 
 
 
-TetraBody::TetraBody(TriMesh *mesh, std::string name, float totalMass, float tetraStiffness, int numTetras, bool deleteExtraTetras)
-    : ProjectiveBody(name, totalMass), m_mesh(mesh)
+TetraBody::TetraBody(TriMesh *mesh, std::string name, float totalMass, float tetraStiffness, int numTetras, bool deleteExtraTetras, float damping, float restitution)
+    : ProjectiveBody(name, TETRA, totalMass, damping, restitution), m_mesh(mesh)
 {
     m_tetraMesh = TetraMesh::CreateEmbeddingMesh(numTetras, mesh, deleteExtraTetras);
     m_mesh = m_tetraMesh->LinkTriMesh(mesh);
@@ -130,5 +130,14 @@ std::vector<PositionConstraint> TetraBody::getPositionConstraints(float stiffnes
 void TetraBody::draw()
 {
     m_mesh->Draw();
-//    m_tetraMesh->draw();
+    //    m_tetraMesh->draw();
+}
+
+void TetraBody::addVelocity(Eigen::Vector3f v)
+{
+    LA::Vector3 vLA = toLAVector3(v);
+    for(int i=0; i<m_numParticles; ++i)
+    {
+        m_tetraMesh->getVertex()[i]._velocity = vLA;
+    }
 }

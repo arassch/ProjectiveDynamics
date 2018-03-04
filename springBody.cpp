@@ -1,8 +1,8 @@
 #include "springBody.h"
 #include "utils.h"
 
-SpringBody::SpringBody(TriMesh *mesh, std::string name, float totalMass, float springStiffness, bool addExtraSprings, float maxDistance)
-    : ProjectiveBody(name, totalMass), m_mesh(mesh)
+SpringBody::SpringBody(TriMesh *mesh, std::string name, float totalMass, float springStiffness, bool addExtraSprings, float maxDistance, float damping, float restitution)
+    : ProjectiveBody(name, SPRING, totalMass, damping, restitution), m_mesh(mesh)
 {
     m_numParticles = m_mesh->NumVertices();
 

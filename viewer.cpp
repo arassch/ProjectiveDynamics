@@ -28,8 +28,8 @@ void Viewer::init()
 //    testSceneClothConstrainedTopCorners();
 //    testSceneClothConstrainedCorners();
 //    testSceneClothDropping();
-//    testSceneDeformableSphere();
-    testSceneDeformableBlock();
+    testSceneDeformableSphere();
+//    testSceneDeformableBlock();
 //    testSceneDeformableBlockDropping();
 
     m_simulator = new Simulator(m_dt, m_iterations, m_bodies, m_collisionStiffness);
@@ -158,7 +158,8 @@ void Viewer::testSceneDeformableSphere()
     if(!m_init)
     {
         m_dt = 0.001;
-        m_iterations = 3;
+        m_iterations = 5;
+        m_tetraStiffness = 10000000;
 
         m_init = true;
     }
@@ -166,13 +167,38 @@ void Viewer::testSceneDeformableSphere()
     glPointSize(10.0);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ);
-    TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, m_tetraStiffness, 3, true);
+    {
+        TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.1);
+        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 1000000, 5, true, 0.9, 2);
 
-    m_bodies.push_back(body);
+        //    body->addVelocity(Eigen::Vector3f(10,0,0));
+
+        m_bodies.push_back(body);
+    }
+
+//    {
+//        TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.1);
+//        mesh->Transform(LA::Vector3(-0.3,0,0), LA::Quaternion(0,1,0,0));
+//        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 3000, 5, true, 1, 2);
+
+//        //    body->addVelocity(Eigen::Vector3f(10,0,0));
+
+//        m_bodies.push_back(body);
+//    }
+
+//    {
+//        TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.1);
+//        mesh->Transform(LA::Vector3(-0.6,0,0), LA::Quaternion(0,1,0,0));
+//        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 500, 5, true);
+
+//        //    body->addVelocity(Eigen::Vector3f(10,0,0));
+
+//        m_bodies.push_back(body);
+//    }
+
 
     // static bodies
-    TriMesh *rb = TriMesh::CreateBlockMesh(Vector3(-10,-10,-10), Vector3(10, -3, 10));
+    TriMesh *rb = TriMesh::CreateBlockMesh(Vector3(-10,-10,-10), Vector3(10, -0.3, 10));
 
     StaticBody* floor = new StaticBody(rb, "floor");
     m_bodies.push_back(floor);

@@ -19,7 +19,8 @@ class SpringBody : public ProjectiveBody
     std::vector<PositionConstraint*> m_positionConstraints;
 
 public:
-    SpringBody(TriMesh* mesh, std::string name, float totalMass, float springStiffness, bool addExtraSprings=false, float maxDistance=0);
+    SpringBody(TriMesh* mesh, std::string name, float totalMass, float springStiffness, bool addExtraSprings=false, float maxDistance=0,
+               float damping=0.95, float restitution=1);
 
     Eigen::VectorXf getPositions();
 

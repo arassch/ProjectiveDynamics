@@ -13,7 +13,7 @@ class StaticBody : public ProjectiveBody
 
 public:
     StaticBody(TriMesh* mesh, std::string name)
-        : ProjectiveBody(name, 0), m_mesh(mesh)
+        : ProjectiveBody(name, STATIC, 0), m_mesh(mesh)
     {
         m_CCDHandler = new HashCCDHandler(m_mesh);
         m_CCDHandler->Init();

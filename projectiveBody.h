@@ -18,15 +18,27 @@ protected:
 
     float m_totalMass;
 
+    float m_damping;
+
+    float m_restitution;
+
     HashCCDHandler* m_CCDHandler;
 
 public:
 
-    ProjectiveBody(std::string name, float totalMass) : m_name(name), m_totalMass(totalMass), m_CCDHandler(0) {}
+    enum Type {STATIC, SPRING, TETRA};
+    Type m_type;
+
+    ProjectiveBody(std::string name, Type type, float totalMass, float damping=0.95, float restitution=1)
+        : m_name(name), m_type(type), m_totalMass(totalMass), m_damping(damping), m_restitution(restitution), m_CCDHandler(0) {}
 
     std::string getName() { return m_name; }
 
+    Type getType() { return m_type; }
+
     int getNumParticles() { return m_numParticles; }
+
+    float getDamping() { return m_damping; }
 
     Eigen::VectorXf getParticleMassVector()
     {
