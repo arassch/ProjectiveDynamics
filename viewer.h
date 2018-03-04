@@ -5,6 +5,9 @@
 
 #include <Eigen/Core>
 
+#include <opencv2/core/core.hpp>        // Basic OpenCV structures (cv::Mat)
+#include <opencv2/highgui/highgui.hpp>  // Video write
+
 #include <TriMesh.h>
 #include <TetraMesh.h>
 
@@ -45,6 +48,7 @@ public:
     Viewer(QWidget *parent);
 
     bool m_drawMeshes;
+    bool m_drawSimulationPoints;
     int m_meshRows, m_meshColumns;
     double m_meshSize;
     float m_dt;
@@ -64,6 +68,9 @@ private:
 
     bool m_play;
     bool m_step;
+    bool m_saveVideo;
+    std::string m_videoName;
+    cv::VideoWriter m_videoWriter;
 
 
     enum SelectionMode { NONE, ADD, REMOVE };
@@ -78,11 +85,15 @@ private:
     bool m_move;
     QPoint m_initialPoint;
 
+Q_SIGNALS:
+    void makingVideo(bool active);
+
 
 public Q_SLOTS:
     void reset();
 
     void changeDrawMeshes(int val);
+    void changeDrawSimulationPoints(int val);
     void changeMeshRows(int val);
     void changeMeshCols(int val);
     void changeSize(double size);
@@ -93,7 +104,7 @@ public Q_SLOTS:
     void changeTetraStiffness(double val);
     void changePositionStiffness(double val);
     void changeCollisionStiffness(double val);
-
+    void makeVideo();
 
 
 };

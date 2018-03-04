@@ -35,10 +35,10 @@ void Simulator::initialize(float dt, int iterations, vector<ProjectiveBody*> &bo
         totalNumParticles += bodies[i]->getNumParticles();
     }
 
-    for(auto it = m_bodyToIndex.begin(); it!=m_bodyToIndex.end(); ++it)
-    {
-        std::cout << it->first << " " << it->second << std::endl;
-    }
+//    for(auto it = m_bodyToIndex.begin(); it!=m_bodyToIndex.end(); ++it)
+//    {
+//        std::cout << it->first << " " << it->second << std::endl;
+//    }
 
     m_q[0].resize(totalNumParticles);
     m_q[1].resize(totalNumParticles);
@@ -174,7 +174,7 @@ void Simulator::advanceTime()
             }
         }
     }
-    std::cout << "NumCollisions: " << m_collisions.size() << std::endl;
+//    std::cout << "NumCollisions: " << m_collisions.size() << std::endl;
     for(int i=0;i<m_bodies.size();++i)
     {
         if(m_bodies[i]->getCCDHandler())
@@ -395,5 +395,5 @@ void Simulator::advanceTime()
         m_v[2][index] = vReflect[2];
     }
 
-    cout << "Total Time: " << myTotalTimer.elapsed() << endl;
+//    cout << "Total Time: " << myTotalTimer.elapsed() << endl;
 }

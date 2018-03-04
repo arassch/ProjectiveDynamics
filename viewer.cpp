@@ -3,6 +3,7 @@
 #include <set>
 #include <stdlib.h> // RAND_MAX
 
+#include <QFileDialog>
 
 #include <TriCirculator.h>
 #include <Tetra.h>
@@ -28,8 +29,8 @@ void Viewer::init()
 //    testSceneClothConstrainedTopCorners();
 //    testSceneClothConstrainedCorners();
 //    testSceneClothDropping();
-    testSceneDeformableSphere();
-//    testSceneDeformableBlock();
+//    testSceneDeformableSphere();
+    testSceneDeformableBlock();
 //    testSceneDeformableBlockDropping();
 
     m_simulator = new Simulator(m_dt, m_iterations, m_bodies, m_collisionStiffness);
@@ -177,25 +178,25 @@ void Viewer::testSceneDeformableSphere()
         m_bodies.push_back(body);
     }
 
-//    {
-//        TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.1);
-//        mesh->Transform(LA::Vector3(-0.3,0,0), LA::Quaternion(0,1,0,0));
-//        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 3000, 5, true, 1, 2);
+    {
+        TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.1);
+        mesh->Transform(LA::Vector3(-0.3,0,0), LA::Quaternion(0,1,0,0));
+        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 3000, 5, true, 0.98, 2);
 
-//        //    body->addVelocity(Eigen::Vector3f(10,0,0));
+        //    body->addVelocity(Eigen::Vector3f(10,0,0));
 
-//        m_bodies.push_back(body);
-//    }
+        m_bodies.push_back(body);
+    }
 
-//    {
-//        TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.1);
-//        mesh->Transform(LA::Vector3(-0.6,0,0), LA::Quaternion(0,1,0,0));
-//        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 500, 5, true);
+    {
+        TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.1);
+        mesh->Transform(LA::Vector3(-0.6,0,0), LA::Quaternion(0,1,0,0));
+        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 500, 5, true, 0.98, 2);
 
-//        //    body->addVelocity(Eigen::Vector3f(10,0,0));
+        //    body->addVelocity(Eigen::Vector3f(10,0,0));
 
-//        m_bodies.push_back(body);
-//    }
+        m_bodies.push_back(body);
+    }
 
 
     // static bodies
@@ -304,72 +305,87 @@ void Viewer::draw()
     }
 
     glDisable(GL_LIGHTING);
-    glPointSize(10);
-
-    glColor3f(1.0f,0.0,0.0f);
-    glBegin(GL_POINTS);
-
-    glColor3f(0,0,1);
-    for (unsigned i = 0; i < m_simulator->m_projected.size(); i++)
+    if(m_drawSimulationPoints)
     {
-        Eigen::Vector3f p = m_simulator->m_projected[i];
-        glVertex3f(p[0], p[1], p[2]);
-    }
+        glPointSize(10);
 
-    glColor3f(1,0,1);
-    for (unsigned i = 0; i < m_simulator->m_projectedCollisions.size(); i++)
-    {
-        Eigen::Vector3f p = m_simulator->m_projectedCollisions[i];
-        glVertex3f(p[0], p[1], p[2]);
-    }
+        glColor3f(1.0f,0.0,0.0f);
+        glBegin(GL_POINTS);
 
-    glColor3f(0,1,0);
-    for (unsigned i = 0; i < m_simulator->m_sn[0].rows(); i++)
-    {
-        glVertex3f(m_simulator->m_sn[0][i], m_simulator->m_sn[1][i], m_simulator->m_sn[2][i]);
-    }
-
-    glColor3f(1,0,0);
-    vector<Simulator::Collision> collisions = m_simulator->getCollisions();
-    for (unsigned i = 0; i < collisions.size(); i++)
-    {
-        LA::Vector3 p = collisions[i].info->p;
-        glVertex3f(p[0], p[1], p[2]);
-    }
-
-
-    glEnd();
-
-
-
-    glBegin(GL_LINES);
-    glColor3f(1,0,1);
-    for (unsigned i = 0; i < m_simulator->m_constraints.size(); i++)
-    {
-        ProjectiveConstraint* constraint = m_simulator->m_constraints[i];
-        int bodyIndex = m_simulator->m_bodyToIndex[constraint->m_body];
-        for(int j=0; j<constraint->m_numParticles; ++j)
+        glColor3f(0,0,1);
+        for (unsigned i = 0; i < m_simulator->m_projected.size(); i++)
         {
-            for(int k=j+1; k<constraint->m_numParticles; ++k)
-            {
+            Eigen::Vector3f p = m_simulator->m_projected[i];
+            glVertex3f(p[0], p[1], p[2]);
+        }
 
-                glVertex3f(m_simulator->m_q[0][bodyIndex+constraint->getVIndex(j)],
-                        m_simulator->m_q[1][bodyIndex+constraint->getVIndex(j)],
-                        m_simulator->m_q[2][bodyIndex+constraint->getVIndex(j)]);
-                glVertex3f(m_simulator->m_q[0][bodyIndex+constraint->getVIndex(k)],
-                        m_simulator->m_q[1][bodyIndex+constraint->getVIndex(k)],
-                        m_simulator->m_q[2][bodyIndex+constraint->getVIndex(k)]);
+        glColor3f(1,0,1);
+        for (unsigned i = 0; i < m_simulator->m_projectedCollisions.size(); i++)
+        {
+            Eigen::Vector3f p = m_simulator->m_projectedCollisions[i];
+            glVertex3f(p[0], p[1], p[2]);
+        }
+
+        glColor3f(0,1,0);
+        for (unsigned i = 0; i < m_simulator->m_sn[0].rows(); i++)
+        {
+            glVertex3f(m_simulator->m_sn[0][i], m_simulator->m_sn[1][i], m_simulator->m_sn[2][i]);
+        }
+
+        glColor3f(1,0,0);
+        vector<Simulator::Collision> collisions = m_simulator->getCollisions();
+        for (unsigned i = 0; i < collisions.size(); i++)
+        {
+            LA::Vector3 p = collisions[i].info->p;
+            glVertex3f(p[0], p[1], p[2]);
+        }
+
+
+        glEnd();
+
+
+
+        glBegin(GL_LINES);
+        glColor3f(1,0,1);
+        for (unsigned i = 0; i < m_simulator->m_constraints.size(); i++)
+        {
+            ProjectiveConstraint* constraint = m_simulator->m_constraints[i];
+            int bodyIndex = m_simulator->m_bodyToIndex[constraint->m_body];
+            for(int j=0; j<constraint->m_numParticles; ++j)
+            {
+                for(int k=j+1; k<constraint->m_numParticles; ++k)
+                {
+
+                    glVertex3f(m_simulator->m_q[0][bodyIndex+constraint->getVIndex(j)],
+                            m_simulator->m_q[1][bodyIndex+constraint->getVIndex(j)],
+                            m_simulator->m_q[2][bodyIndex+constraint->getVIndex(j)]);
+                    glVertex3f(m_simulator->m_q[0][bodyIndex+constraint->getVIndex(k)],
+                            m_simulator->m_q[1][bodyIndex+constraint->getVIndex(k)],
+                            m_simulator->m_q[2][bodyIndex+constraint->getVIndex(k)]);
+                }
             }
         }
+        glEnd();
+
     }
-    glEnd();
-
-
     glEnable(GL_LIGHTING);
 
     // Draws rectangular selection area. Could be done in postDraw() instead.
-    if (m_selectionMode != NONE)
-        drawSelectionRectangle();
+//    if (m_selectionMode != NONE)
+//        drawSelectionRectangle();
+
+    if(m_saveVideo)
+    {
+        QImage img = this->grab().toImage();
+        cv::Mat mat = qImageToCVMat(img);
+
+        if(!m_videoWriter.isOpened())
+        {
+            std::cout << "Writting video" << std::endl;
+            m_videoWriter.open(m_videoName.c_str(),CV_FOURCC('M','J','P','G'),25, cv::Size(mat.cols,mat.rows),true);
+        }
+        m_videoWriter.write(mat);
+    }
 }
 
 void Viewer::animate()
@@ -467,6 +483,16 @@ void Viewer::keyPressEvent(QKeyEvent *key)
 //            m_simulator->initialize(m_dt, m_hardConstraintsIndices, m_hardConstraintsPositions, m_springConstraints, m_tetraConstraints);
 //        }
 //    }
+    else if(key->text() == "v")
+    {
+        if(m_saveVideo)
+        {
+            m_saveVideo = false;
+            m_videoWriter.release();
+        }
+        else
+            m_saveVideo = true;
+    }
     else
         QGLViewer::keyPressEvent(key);
 }
@@ -628,6 +654,7 @@ Viewer::Viewer(QWidget *parent) : QGLViewer(parent)
     m_move = false;
 
     m_drawMeshes = true;
+    m_drawSimulationPoints = false;
     m_meshRows = 10;
     m_meshColumns = 10;
     m_meshSize = 1;
@@ -643,6 +670,7 @@ Viewer::Viewer(QWidget *parent) : QGLViewer(parent)
 
     m_simulator = 0;
 
+    m_saveVideo = false;
 }
 
 void Viewer::reset()
@@ -658,6 +686,11 @@ void Viewer::reset()
 void Viewer::changeDrawMeshes(int val)
 {
     m_drawMeshes = val;
+}
+
+void Viewer::changeDrawSimulationPoints(int val)
+{
+    m_drawSimulationPoints = val;
 }
 
 void Viewer::changeMeshRows(int val)
@@ -710,6 +743,28 @@ void Viewer::changeCollisionStiffness(double val)
     m_collisionStiffness = val;
     if(m_simulator)
         m_simulator->m_collisionStiffness = val;
+}
+
+void Viewer::makeVideo()
+{
+    if(m_saveVideo)
+    {
+        m_saveVideo = false;
+        m_videoWriter.release();
+        emit(makingVideo(false));
+    }
+    else
+    {
+        m_videoName = QFileDialog::getSaveFileName(this, tr("Save File"),
+                                                   ".",
+                                                   tr("Videos (*.avi)")).toStdString();
+        if(m_videoName.length() > 0)
+        {
+            m_saveVideo = true;
+            emit(makingVideo(true));
+        }
+    }
+
 }
 
 

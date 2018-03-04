@@ -33,4 +33,12 @@ float clamp(float value, float min, float max)
     return res;
 }
 
+cv::Mat qImageToCVMat(QImage const &src)
+{
+    cv::Mat mat = cv::Mat(src.height(), src.width(), CV_8UC4, (uchar*)src.bits(), src.bytesPerLine());
+    cv::Mat result = cv::Mat(mat.rows, mat.cols, CV_8UC3 );
+    int from_to[] = { 0,0,  1,1,  2,2 };
+    cv::mixChannels( &mat, 1, &result, 1, from_to, 3 );
+    return result;
+}
 

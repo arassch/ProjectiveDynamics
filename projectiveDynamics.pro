@@ -29,7 +29,8 @@ HEADERS  = \
     projectiveBody.h \
     staticBody.h \
     projectiveConstraint.h \
-    tetraBody.h
+    tetraBody.h \
+    viewerInterface.h
 SOURCES  = main.cpp \
     viewer.cpp \
     springConstraint.cpp \
@@ -38,7 +39,8 @@ SOURCES  = main.cpp \
     positionConstraint.cpp \
     tetraConstraint.cpp \
     springBody.cpp \
-    tetraBody.cpp
+    tetraBody.cpp \
+    viewerInterface.cpp
 
 FORMS *= viewerInterface.ui
 
@@ -130,3 +132,8 @@ else {
 INCLUDEPATH += $$PWD/../../ElasticFEM/FEM/inc
 
 INCLUDEPATH += $$PWD/../../eigen
+
+
+INCLUDEPATH += /usr/local/Cellar/opencv/3.3.0_2/include/
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.10
+LIBS += -L/usr/local/Cellar/opencv/3.3.0_2/lib -lopencv_imgcodecs -lopencv_highgui -lopencv_video -lopencv_optflow -lopencv_tracking -lopencv_videoio -lopencv_core -lopencv_plot -lopencv_imgproc -lopencv_objdetect

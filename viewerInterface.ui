@@ -70,6 +70,20 @@
       </widget>
      </item>
      <item>
+      <widget class="QCheckBox" name="drawSimulationPointsCheck">
+       <property name="text">
+        <string>Points</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="videoButton">
+       <property name="text">
+        <string>Make Video</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -353,6 +367,8 @@
     <slot>reset()</slot>
     <slot>changePositionStiffness(double)</slot>
     <slot>changeDrawMeshes(int)</slot>
+    <slot>changeDrawSimulationPoints(int)</slot>
+    <slot>makeVideo()</slot>
    </slots>
   </customwidget>
  </customwidgets>
@@ -627,6 +643,38 @@
     <hint type="destinationlabel">
      <x>499</x>
      <y>323</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>drawSimulationPointsCheck</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>viewer</receiver>
+   <slot>changeDrawSimulationPoints(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>267</x>
+     <y>668</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>499</x>
+     <y>323</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>videoButton</sender>
+   <signal>clicked()</signal>
+   <receiver>viewer</receiver>
+   <slot>makeVideo()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>336</x>
+     <y>665</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>499</x>
+     <y>321</y>
     </hint>
    </hints>
   </connection>

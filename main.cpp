@@ -22,32 +22,10 @@
 
 #include <qapplication.h>
 
-#include "ui_viewerInterface.h"
+#include "viewerInterface.h"
 
-class ViewerInterface : public QDialog, public Ui::Dialog {
-public:
-    ViewerInterface()
-    {
-        setupUi(this);
-    }
-
-    void updateVariables()
-    {
-        drawMeshesCheck->setChecked(viewer->m_drawMeshes);
-        meshRows->setValue(viewer->m_meshRows);
-        meshColumns->setValue(viewer->m_meshColumns);
-        meshSize->setValue(viewer->m_meshSize);
-        timestep->setValue(viewer->m_dt);
-        iterations->setValue(viewer->m_iterations);
-        collisionStiffness->setValue(viewer->m_collisionStiffness);
-        springStiffness->setValue(viewer->m_springStiffness);
-        tetraStiffness->setValue(viewer->m_tetraStiffness);
-        positionStiffness->setValue(viewer->m_positionStiffness);
-    }
-
-};
-
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
 
     QApplication application(argc, argv);
 
