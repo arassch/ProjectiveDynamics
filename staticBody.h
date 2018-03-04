@@ -58,6 +58,12 @@ public:
         return constraints;
     }
 
+    std::vector<int> getIndices(int vIndex)
+    {
+        std::vector<int> indices;
+        return indices;
+    }
+
     void draw()
     {
         m_mesh->Draw();

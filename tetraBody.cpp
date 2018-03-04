@@ -127,6 +127,21 @@ std::vector<PositionConstraint> TetraBody::getPositionConstraints(float stiffnes
     return constraints;
 }
 
+std::vector<int> TetraBody::getIndices(int vIndex)
+{
+    std::vector<int> indices;
+
+    TriVertex *v = m_mesh->Vertices()[vIndex];
+    linearinterpolationlib::LinearInterpolation* inter = dynamic_cast<linearinterpolationlib::LinearInterpolation*>(v->GetInterpolation());
+    for(int i=0; i<4; ++i)
+    {
+        int index = inter->tet->_vertex[i]->_id;
+        indices.push_back(index);
+    }
+
+    return indices;
+}
+
 void TetraBody::draw()
 {
     m_mesh->Draw();

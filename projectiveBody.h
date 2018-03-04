@@ -40,6 +40,8 @@ public:
 
     float getDamping() { return m_damping; }
 
+    float getRestitution() { return m_restitution; }
+
     Eigen::VectorXf getParticleMassVector()
     {
         Eigen::VectorXf mass(m_numParticles);
@@ -61,6 +63,8 @@ public:
     virtual void addPositionConstraint(float stiffness, int vIndex) = 0;
 
     virtual std::vector<PositionConstraint> getPositionConstraints(float stiffness, int vIndex, Eigen::Vector3f &position) = 0;
+
+    virtual std::vector<int> getIndices(int vIndex) = 0;
 
     virtual void draw() = 0;
 };

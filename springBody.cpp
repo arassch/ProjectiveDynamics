@@ -114,6 +114,13 @@ std::vector<PositionConstraint> SpringBody::getPositionConstraints(float stiffne
     return constraints;
 }
 
+std::vector<int> SpringBody::getIndices(int vIndex)
+{
+    std::vector<int> indices;
+    indices.push_back(vIndex);
+    return indices;
+}
+
 void SpringBody::draw()
 {
     m_mesh->Draw();

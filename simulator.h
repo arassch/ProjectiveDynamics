@@ -41,7 +41,7 @@ public:
     };
 
     vector<Collision> m_collisions;
-    vector<std::pair<int, Eigen::Vector3f> > m_appliedCollisions;
+    vector<std::pair<Collision*, int> > m_appliedCollisions;
     bool m_collisionsInPreviousFrame;
 
 

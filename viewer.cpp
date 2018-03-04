@@ -158,8 +158,9 @@ void Viewer::testSceneDeformableSphere()
     if(!m_init)
     {
         m_dt = 0.001;
-        m_iterations = 5;
+        m_iterations = 10;
         m_tetraStiffness = 10000000;
+        m_totalMass = 1;
 
         m_init = true;
     }
@@ -169,9 +170,9 @@ void Viewer::testSceneDeformableSphere()
 
     {
         TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.1);
-        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 1000000, 5, true, 0.9, 2);
+        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 10000000, 5, true, 0.98, 2);
 
-        //    body->addVelocity(Eigen::Vector3f(10,0,0));
+//            body->addVelocity(Eigen::Vector3f(30,0,0));
 
         m_bodies.push_back(body);
     }

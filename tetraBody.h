@@ -39,6 +39,8 @@ public:
 
     std::vector<PositionConstraint> getPositionConstraints(float stiffness, int vIndex, Eigen::Vector3f &position);
 
+    std::vector<int> getIndices(int vIndex);
+
     void draw();
 
     TetraMesh *getTetraMesh() { return m_tetraMesh; }
