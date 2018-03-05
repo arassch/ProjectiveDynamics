@@ -23,6 +23,7 @@ void ViewerInterface::updateVariables()
     meshRows->setValue(viewer->m_meshRows);
     meshColumns->setValue(viewer->m_meshColumns);
     meshSize->setValue(viewer->m_meshSize);
+    particleMass->setValue(viewer->m_totalMass);
     timestep->setValue(viewer->m_dt);
     iterations->setValue(viewer->m_iterations);
     collisionStiffness->setValue(viewer->m_collisionStiffness);

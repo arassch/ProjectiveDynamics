@@ -47,6 +47,9 @@ FORMS *= viewerInterface.ui
 CONFIG += qt
 QT *= xml opengl widgets gui
 
+DEFINES += PROJECT_FOLDER=\\\"$$PWD/..\\\"
+
+
 
 LIBS += -L$$PWD/../../libQGLViewer-2.7.0/QGLViewer/ -lQGLViewer
 

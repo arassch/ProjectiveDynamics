@@ -25,18 +25,19 @@ void Viewer::init()
 
     m_bodies.clear();
 
-//    testSceneClothOnStaticBody();
+    testSceneClothOnStaticBody();
 //    testSceneClothConstrainedTopCorners();
 //    testSceneClothConstrainedCorners();
 //    testSceneClothDropping();
 //    testSceneDeformableSphere();
-    testSceneDeformableBlock();
+//    testSceneDeformableBlock();
 //    testSceneDeformableBlockDropping();
 
     m_simulator = new Simulator(m_dt, m_iterations, m_bodies, m_collisionStiffness);
 
     m_play = false;
     m_step = false;
+    m_currentTime = 0;
 
 //    help();
     startAnimation();
@@ -48,8 +49,9 @@ void Viewer::testSceneClothOnStaticBody()
     {
         m_meshRows = 15;
         m_meshColumns = 15;
-        m_dt = 0.001;
-        m_iterations = 3;
+        m_dt = 0.01;
+        m_iterations = 15;
+        m_totalMass = 5;
 
         m_init = true;
     }
@@ -58,12 +60,13 @@ void Viewer::testSceneClothOnStaticBody()
     int cols = m_meshColumns;
     float meshCellSize = m_meshSize/m_meshRows;
     TriMesh* mesh = TriMesh::CreatePatchMesh(rows, cols, meshCellSize);
+    mesh->GetFaceProperties()->invertNormal = true;
     mesh->Transform(Vector3(0,0.5,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(1,0,0)));
 //    m_mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(M_PI_4, Vector3(0,0,1)));
     glPointSize(10.0);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    SpringBody* body = new SpringBody(mesh, "cloth", m_totalMass, m_springStiffness, true, 1.01*2*meshCellSize*meshCellSize);
+    SpringBody* body = new SpringBody(mesh, "cloth", m_totalMass, m_springStiffness, true, 1.01*2*meshCellSize*meshCellSize, 0.9, 1);
 
     m_bodies.push_back(body);
 
@@ -212,6 +215,7 @@ void Viewer::testSceneDeformableBlock()
     {
         m_dt = 0.01;
         m_iterations = 1;
+        m_totalMass = 10;
 
         m_init = true;
     }
@@ -224,7 +228,7 @@ void Viewer::testSceneDeformableBlock()
     std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
     mesh->Transform(LA::Vector3(0,0,-0.0), LA::Quaternion(0,1,0,0));
 
-    TetraBody* body = new TetraBody(mesh, "block", m_totalMass, 10000, 10, true);
+    TetraBody* body = new TetraBody(mesh, "block", m_totalMass, 10000, 15, true, 1, 1);
 
 
     for(int i=0;i<leftVertices.size();++i)
@@ -240,7 +244,7 @@ void Viewer::testSceneDeformableBlock()
     LA::Bounds3d bbox2(LA::Vector3(-1,-1,-1), LA::Vector3(0.01, 1, 1));
     std::vector<TriVertex*> leftVertices2 = *(mesh2->getTriVertexInBB(bbox2));
     mesh2->Transform(LA::Vector3(0,0,-0.3), LA::Quaternion(0,1,0,0));
-    TetraBody* body2 = new TetraBody(mesh2, "block", m_totalMass, 100000, 10, true);
+    TetraBody* body2 = new TetraBody(mesh2, "block", m_totalMass, 100000, 15, true, 1, 1);
 
     for(int i=0;i<leftVertices2.size();++i)
     {
@@ -255,7 +259,7 @@ void Viewer::testSceneDeformableBlock()
     LA::Bounds3d bbox3(LA::Vector3(-1,-1,-1), LA::Vector3(0.01, 1, 1));
     std::vector<TriVertex*> leftVertices3 = *(mesh3->getTriVertexInBB(bbox2));
     mesh3->Transform(LA::Vector3(0,0,-0.6), LA::Quaternion(0,1,0,0));
-    TetraBody* body3 = new TetraBody(mesh3, "block", m_totalMass, 1000000, 10, true);
+    TetraBody* body3 = new TetraBody(mesh3, "block", m_totalMass, 1000000, 15, true, 1, 1);
 
     for(int i=0;i<leftVertices3.size();++i)
     {
@@ -374,7 +378,7 @@ void Viewer::draw()
 //    if (m_selectionMode != NONE)
 //        drawSelectionRectangle();
 
-    if(m_saveVideo)
+    if(m_saveVideo && (m_currentTime - m_timeOfLastImage >= 1.0/m_videoFps || !m_videoWriter.isOpened()))
     {
         QImage img = this->grab().toImage();
         cv::Mat mat = qImageToCVMat(img);
@@ -382,9 +386,10 @@ void Viewer::draw()
         if(!m_videoWriter.isOpened())
         {
             std::cout << "Writting video" << std::endl;
-            m_videoWriter.open(m_videoName.c_str(),CV_FOURCC('M','J','P','G'),25, cv::Size(mat.cols,mat.rows),true);
+            m_videoWriter.open(m_videoName.c_str(),CV_FOURCC('M','J','P','G'), m_videoFps, cv::Size(mat.cols,mat.rows),true);
         }
         m_videoWriter.write(mat);
+        m_timeOfLastImage = m_currentTime;
     }
 }
 
@@ -393,6 +398,7 @@ void Viewer::animate()
     if(m_play || m_step)
     {
         m_simulator->advanceTime();
+        m_currentTime += m_simulator->m_dt;
     }
 
     m_step &= false;
@@ -756,11 +762,13 @@ void Viewer::makeVideo()
     else
     {
         m_videoName = QFileDialog::getSaveFileName(this, tr("Save File"),
-                                                   ".",
+                                                   QString(PROJECT_FOLDER),
                                                    tr("Videos (*.avi)")).toStdString();
         if(m_videoName.length() > 0)
         {
             m_saveVideo = true;
+            m_videoFps = 25;
+            m_timeOfLastImage = 0;
             emit(makingVideo(true));
         }
     }

@@ -68,9 +68,13 @@ private:
 
     bool m_play;
     bool m_step;
+    float m_currentTime;
+
     bool m_saveVideo;
     std::string m_videoName;
     cv::VideoWriter m_videoWriter;
+    float m_videoFps;
+    float m_timeOfLastImage;
 
 
     enum SelectionMode { NONE, ADD, REMOVE };
