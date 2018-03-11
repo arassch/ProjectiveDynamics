@@ -5,10 +5,20 @@
 
 
 
-TetraBody::TetraBody(TriMesh *mesh, std::string name, float totalMass, float tetraStiffness, int numTetras, bool deleteExtraTetras, float damping, float restitution)
+TetraBody::TetraBody(string filename, TriMesh *mesh, std::string name, float totalMass, float tetraStiffness, int numTetras, bool deleteExtraTetras, float damping, float restitution, LinalFloat scale, const Vector3 &translate, const Matrix33 &rotate)
     : ProjectiveBody(name, TETRA, totalMass, damping, restitution), m_mesh(mesh)
 {
-    m_tetraMesh = TetraMesh::CreateEmbeddingMesh(numTetras, mesh, deleteExtraTetras);
+    ifstream f(filename.c_str());
+    if(f.good())
+    {
+        f.close();
+        m_tetraMesh = TetraMesh::ReadFromFile(filename.c_str(), TetraMesh::MESH, scale, translate, rotate);
+    }
+    else
+    {
+        m_tetraMesh = TetraMesh::CreateEmbeddingMesh(numTetras, mesh, deleteExtraTetras);
+        m_tetraMesh->WriteToFile(filename.c_str());
+    }
     m_mesh = m_tetraMesh->LinkTriMesh(mesh);
 
     m_numParticles = m_tetraMesh->numVertices();

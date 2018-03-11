@@ -74,7 +74,7 @@ void Simulator::initialize(float dt, int iterations, vector<ProjectiveBody*> &bo
 
     }
 
-    m_numParticles = m_q[0].rows();
+    m_numParticles = totalNumParticles;
 
     m_massMatrix = m_particleMass.asDiagonal();
     m_massMatrixInv = m_massMatrix.inverse();
@@ -105,7 +105,8 @@ void Simulator::initialize(float dt, int iterations, vector<ProjectiveBody*> &bo
     m_fext[0].resize(m_numParticles);
     m_fext[0].setZero();
     m_fext[1].resize(m_numParticles);
-    m_fext[1].setConstant(-9.8);
+    for(int i=0;i<totalNumParticles;++i)
+        m_fext[1][i] = -9.8 * m_particleMass[i];
     m_fext[2].resize(m_numParticles);
     m_fext[2].setZero();
 

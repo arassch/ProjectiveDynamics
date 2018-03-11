@@ -25,12 +25,12 @@ void Viewer::init()
 
     m_bodies.clear();
 
-    testSceneClothOnStaticBody();
+//    testSceneClothOnStaticBody();
 //    testSceneClothConstrainedTopCorners();
 //    testSceneClothConstrainedCorners();
 //    testSceneClothDropping();
 //    testSceneDeformableSphere();
-//    testSceneDeformableBlock();
+    testSceneDeformableBlock();
 //    testSceneDeformableBlockDropping();
 
     m_simulator = new Simulator(m_dt, m_iterations, m_bodies, m_collisionStiffness);
@@ -172,9 +172,14 @@ void Viewer::testSceneDeformableSphere()
     glPointSize(10.0);
     glBlendFunc(GL_ONE, GL_ONE);
 
+    int tetraResolution = 5;
+
     {
-        TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.1);
-        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 10000000, 5, true, 0.98, 2);
+        QString filename = "/Users/sarac.schvartzman/Dropbox/Code/sphere";
+        TriMesh* mesh = TriMesh::ReadFromFile((filename + ".obj").toStdString().c_str(), TriMesh::OBJ, 0.1);
+
+        filename += "_" + QString::number(tetraResolution);
+        TetraBody* body = new TetraBody((filename + ".tetra").toStdString().c_str(), mesh, "sphere", m_totalMass, 10000000, tetraResolution, true, 0.98, 2);
 
 //            body->addVelocity(Eigen::Vector3f(30,0,0));
 
@@ -182,9 +187,12 @@ void Viewer::testSceneDeformableSphere()
     }
 
     {
-        TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.1);
+        QString filename = "/Users/sarac.schvartzman/Dropbox/Code/sphere";
+        TriMesh* mesh = TriMesh::ReadFromFile((filename + ".obj").toStdString().c_str(), TriMesh::OBJ, 0.1);
         mesh->Transform(LA::Vector3(-0.3,0,0), LA::Quaternion(0,1,0,0));
-        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 3000, 5, true, 0.98, 2);
+
+        filename += "_" + QString::number(tetraResolution);
+        TetraBody* body = new TetraBody((filename + ".tetra").toStdString().c_str(), mesh, "sphere", m_totalMass, 3000, tetraResolution, true, 0.98, 2);
 
         //    body->addVelocity(Eigen::Vector3f(10,0,0));
 
@@ -192,9 +200,12 @@ void Viewer::testSceneDeformableSphere()
     }
 
     {
-        TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.1);
+        QString filename = "/Users/sarac.schvartzman/Dropbox/Code/sphere";
+        TriMesh* mesh = TriMesh::ReadFromFile((filename + ".obj").toStdString().c_str(), TriMesh::OBJ, 0.1);
         mesh->Transform(LA::Vector3(-0.6,0,0), LA::Quaternion(0,1,0,0));
-        TetraBody* body = new TetraBody(mesh, "sphere", m_totalMass, 500, 5, true, 0.98, 2);
+
+        filename += "_" + QString::number(tetraResolution);
+        TetraBody* body = new TetraBody((filename + ".tetra").toStdString().c_str(), mesh, "sphere", m_totalMass, 500, tetraResolution, true, 0.98, 2);
 
         //    body->addVelocity(Eigen::Vector3f(10,0,0));
 
@@ -213,9 +224,9 @@ void Viewer::testSceneDeformableBlock()
 {
     if(!m_init)
     {
-        m_dt = 0.01;
-        m_iterations = 1;
-        m_totalMass = 10;
+        m_dt = 0.001;
+        m_iterations = 3;
+        m_totalMass = 0.1;
 
         m_init = true;
     }
@@ -223,50 +234,63 @@ void Viewer::testSceneDeformableBlock()
     glPointSize(10.0);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv.obj", TriMesh::OBJ, 0.1);
-    LA::Bounds3d bbox(LA::Vector3(-1,-1,-1), LA::Vector3(0.01, 1, 1));
-    std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
-    mesh->Transform(LA::Vector3(0,0,-0.0), LA::Quaternion(0,1,0,0));
+    int tetraResolution = 6;
+    float scale = 0.013;
+    float leftVertsThreshold = 0.001;
+    LA::Bounds3d bbox(LA::Vector3(-1,-1,-1), LA::Vector3(leftVertsThreshold, 1, 1));
+    QString triFilename = "/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv.obj";
+    QString tetraFilename = "/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv_" +
+            QString::number(scale) + "_" +
+            QString::number(tetraResolution) +
+            ".tetra";
 
-    TetraBody* body = new TetraBody(mesh, "block", m_totalMass, 10000, 15, true, 1, 1);
-
-
-    for(int i=0;i<leftVertices.size();++i)
     {
-        body->addPositionConstraint(m_positionStiffness, leftVertices[i]->Id());
+        TriMesh* mesh = TriMesh::ReadFromFile(triFilename.toStdString().c_str(), TriMesh::OBJ, scale);
+        std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
+        mesh->Transform(LA::Vector3(0,0,-0.0), LA::Quaternion(0,1,0,0));
+
+        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 100, tetraResolution, false, 0.99, 1);
+
+
+        for(int i=0;i<leftVertices.size();++i)
+        {
+            body->addPositionConstraint(m_positionStiffness, leftVertices[i]->Id());
+        }
+
+        m_bodies.push_back(body);
     }
 
-    m_bodies.push_back(body);
-
-
-
-    TriMesh* mesh2 = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv.obj", TriMesh::OBJ, 0.1);
-    LA::Bounds3d bbox2(LA::Vector3(-1,-1,-1), LA::Vector3(0.01, 1, 1));
-    std::vector<TriVertex*> leftVertices2 = *(mesh2->getTriVertexInBB(bbox2));
-    mesh2->Transform(LA::Vector3(0,0,-0.3), LA::Quaternion(0,1,0,0));
-    TetraBody* body2 = new TetraBody(mesh2, "block", m_totalMass, 100000, 15, true, 1, 1);
-
-    for(int i=0;i<leftVertices2.size();++i)
     {
-        body2->addPositionConstraint(m_positionStiffness, leftVertices2[i]->Id());
+        TriMesh* mesh = TriMesh::ReadFromFile(triFilename.toStdString().c_str(), TriMesh::OBJ, scale);
+        std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
+        mesh->Transform(LA::Vector3(0,0,-0.03), LA::Quaternion(0,1,0,0));
+
+        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 1000, tetraResolution, false, 0.99, 1, 1.0, LA::Vector3(0,0,-0.03));
+
+
+        for(int i=0;i<leftVertices.size();++i)
+        {
+            body->addPositionConstraint(m_positionStiffness, leftVertices[i]->Id());
+        }
+
+        m_bodies.push_back(body);
     }
 
-    m_bodies.push_back(body2);
-
-
-
-    TriMesh* mesh3 = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv.obj", TriMesh::OBJ, 0.1);
-    LA::Bounds3d bbox3(LA::Vector3(-1,-1,-1), LA::Vector3(0.01, 1, 1));
-    std::vector<TriVertex*> leftVertices3 = *(mesh3->getTriVertexInBB(bbox2));
-    mesh3->Transform(LA::Vector3(0,0,-0.6), LA::Quaternion(0,1,0,0));
-    TetraBody* body3 = new TetraBody(mesh3, "block", m_totalMass, 1000000, 15, true, 1, 1);
-
-    for(int i=0;i<leftVertices3.size();++i)
     {
-        body3->addPositionConstraint(m_positionStiffness, leftVertices3[i]->Id());
-    }
+        TriMesh* mesh = TriMesh::ReadFromFile(triFilename.toStdString().c_str(), TriMesh::OBJ, scale);
+        std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
+        mesh->Transform(LA::Vector3(0,0,-0.06), LA::Quaternion(0,1,0,0));
 
-    m_bodies.push_back(body3);
+        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 10000, tetraResolution, false, 0.99, 1, 1.0, LA::Vector3(0,0,-0.06));
+
+
+        for(int i=0;i<leftVertices.size();++i)
+        {
+            body->addPositionConstraint(m_positionStiffness, leftVertices[i]->Id());
+        }
+
+        m_bodies.push_back(body);
+    }
 
 
 }
@@ -284,12 +308,14 @@ void Viewer::testSceneDeformableBlockDropping()
     glPointSize(10.0);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    TriMesh* mesh = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv.obj", TriMesh::OBJ);
+    QString filename = "/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv";
+    TriMesh* mesh = TriMesh::ReadFromFile((filename + ".obj").toStdString().c_str(), TriMesh::OBJ);
     mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(M_PI/4, Vector3(0,1,1)));
-    TetraBody* body = new TetraBody(mesh, "block", m_totalMass, m_tetraStiffness, 10, true);
-//    TriMesh *mesh = TriMesh::CreateBlockMesh(Vector3(-0.1,-0.1,-0.1), Vector3(0.1, 0.1, 0.1));
-//    mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(M_PI/4, Vector3(0,1,1)));
-//    TetraBody* body = new TetraBody(mesh, m_totalMass, m_tetraStiffness, 1, true);
+
+    int tetraResolution=10;
+    filename += "_" + QString::number(tetraResolution);
+    TetraBody* body = new TetraBody((filename + ".tetra").toStdString().c_str(), mesh, "block", m_totalMass, m_tetraStiffness, tetraResolution, true, 0.99, 1);
+
 
     m_bodies.push_back(body);
 
@@ -388,8 +414,12 @@ void Viewer::draw()
             std::cout << "Writting video" << std::endl;
             m_videoWriter.open(m_videoName.c_str(),CV_FOURCC('M','J','P','G'), m_videoFps, cv::Size(mat.cols,mat.rows),true);
         }
+        else
+            m_videoTotalTime += 1.0/m_videoFps;
         m_videoWriter.write(mat);
         m_timeOfLastImage = m_currentTime;
+
+        std::cout << "Video total time: " << m_videoTotalTime << std::endl;
     }
 }
 
@@ -769,6 +799,7 @@ void Viewer::makeVideo()
             m_saveVideo = true;
             m_videoFps = 25;
             m_timeOfLastImage = 0;
+            m_videoTotalTime = 0;
             emit(makingVideo(true));
         }
     }

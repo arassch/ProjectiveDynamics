@@ -25,7 +25,7 @@ class TetraBody : public ProjectiveBody
     std::vector<PositionConstraint*> m_positionConstraints;
 
 public:
-    TetraBody(TriMesh* mesh, std::string name, float totalMass, float tetraStiffness, int numTetras, bool deleteExtraTetras, float damping=0.95, float restitution=1);
+    TetraBody(std::string filename, TriMesh* mesh, std::string name, float totalMass, float tetraStiffness, int numTetras, bool deleteExtraTetras, float damping=0.95, float restitution=1, LinalFloat scale = 1.0, const Vector3 &translate = Vector3::ZERO, const Matrix33 &rotate = Matrix33::IDENTITY);
 
     Eigen::VectorXf getPositions();
 

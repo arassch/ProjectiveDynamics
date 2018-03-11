@@ -75,6 +75,7 @@ private:
     cv::VideoWriter m_videoWriter;
     float m_videoFps;
     float m_timeOfLastImage;
+    float m_videoTotalTime;
 
 
     enum SelectionMode { NONE, ADD, REMOVE };
