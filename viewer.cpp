@@ -39,6 +39,8 @@ void Viewer::init()
 //    testSceneDeformableBlockDropping();
 //    testSceneSingleSpring();
 
+
+
     m_simulator = new Simulator(m_dt, m_iterations, m_bodies, m_collisionStiffness);
 
     m_play = false;
@@ -56,6 +58,7 @@ void Viewer::testSceneClothOnStaticBody()
 
     if(!m_init)
     {
+        m_demoName = "ClothOnStaticBody";
         m_videoFps = 24;
         m_dt = 0.1*(1.0/m_videoFps);
         m_meshRows = 15;
@@ -66,6 +69,9 @@ void Viewer::testSceneClothOnStaticBody()
         m_totalMass = 1;
         m_restitution = 0.5;
         m_damping = 0.99;
+
+        setStateFileName(QString(PROJECT_FOLDER) + "/" + m_demoName);
+        restoreStateFromFile();
 
         m_init = true;
     }
@@ -115,6 +121,7 @@ void Viewer::testSceneClothConstrainedTopCorners()
 {
     if(!m_init)
     {
+        m_demoName = "ClothConstrainedTopCorners";
         m_videoFps = 24;
         m_dt = (1.0/m_videoFps);
         m_meshRows = 15;
@@ -125,6 +132,9 @@ void Viewer::testSceneClothConstrainedTopCorners()
         m_totalMass = 2;
         m_restitution = 1;
         m_damping = 1;
+
+        setStateFileName(QString(PROJECT_FOLDER) + "/" + m_demoName);
+        restoreStateFromFile();
 
         m_init = true;
     }
@@ -153,16 +163,19 @@ void Viewer::testSceneClothConstrainedCorners()
 {
     if(!m_init)
     {
+        m_demoName = "ClothConstrainedCorners";
         m_videoFps = 24;
         m_dt = (1.0/m_videoFps);
-        m_iterations = 10;
+        m_iterations = 3;
         m_springStiffness = 10;
         m_totalMass = 1;
         m_meshSize = 1.4;
-        m_restitution = 1;
         m_damping = 1;
-        m_meshRows=10;
-        m_meshColumns=10;
+        m_meshRows=15;
+        m_meshColumns=15;
+
+        setStateFileName(QString(PROJECT_FOLDER) + "/" + m_demoName);
+        restoreStateFromFile();
 
         m_init = true;
     }
@@ -223,10 +236,15 @@ void Viewer::testSceneDeformableSphere()
 {
     if(!m_init)
     {
-        m_dt = 0.001;
+        m_demoName = "DeformableSphere";
+        m_videoFps = 24;
+        m_dt = 0.1*(1.0/m_videoFps);
         m_iterations = 10;
         m_tetraStiffness = 10000000;
         m_totalMass = 1;
+
+        setStateFileName(QString(PROJECT_FOLDER) + "/" + m_demoName);
+        restoreStateFromFile();
 
         m_init = true;
     }
@@ -235,12 +253,13 @@ void Viewer::testSceneDeformableSphere()
     glBlendFunc(GL_ONE, GL_ONE);
 
     int tetraResolution = 5;
+    float scale = 1;
 
     {
         QString filename = "/Users/sarac.schvartzman/Dropbox/Code/sphere";
-        TriMesh* mesh = TriMesh::ReadFromFile((filename + ".obj").toStdString().c_str(), TriMesh::OBJ, 0.1);
+        TriMesh* mesh = TriMesh::ReadFromFile((filename + ".obj").toStdString().c_str(), TriMesh::OBJ, scale);
 
-        filename += "_" + QString::number(tetraResolution);
+        filename += "_" + QString::number(scale) + "_" + QString::number(tetraResolution);
         TetraBody* body = new TetraBody((filename + ".tetra").toStdString().c_str(), mesh, "sphere", m_totalMass, 10000000, tetraResolution, true, 0.98, 2);
 
 //            body->addVelocity(Eigen::Vector3f(30,0,0));
@@ -250,10 +269,10 @@ void Viewer::testSceneDeformableSphere()
 
     {
         QString filename = "/Users/sarac.schvartzman/Dropbox/Code/sphere";
-        TriMesh* mesh = TriMesh::ReadFromFile((filename + ".obj").toStdString().c_str(), TriMesh::OBJ, 0.1);
+        TriMesh* mesh = TriMesh::ReadFromFile((filename + ".obj").toStdString().c_str(), TriMesh::OBJ, scale);
         mesh->Transform(LA::Vector3(-0.3,0,0), LA::Quaternion(0,1,0,0));
 
-        filename += "_" + QString::number(tetraResolution);
+        filename += "_" + QString::number(scale) + "_" + QString::number(tetraResolution);
         TetraBody* body = new TetraBody((filename + ".tetra").toStdString().c_str(), mesh, "sphere", m_totalMass, 3000, tetraResolution, true, 0.98, 2);
 
         //    body->addVelocity(Eigen::Vector3f(10,0,0));
@@ -263,10 +282,10 @@ void Viewer::testSceneDeformableSphere()
 
     {
         QString filename = "/Users/sarac.schvartzman/Dropbox/Code/sphere";
-        TriMesh* mesh = TriMesh::ReadFromFile((filename + ".obj").toStdString().c_str(), TriMesh::OBJ, 0.1);
+        TriMesh* mesh = TriMesh::ReadFromFile((filename + ".obj").toStdString().c_str(), TriMesh::OBJ, scale);
         mesh->Transform(LA::Vector3(-0.6,0,0), LA::Quaternion(0,1,0,0));
 
-        filename += "_" + QString::number(tetraResolution);
+        filename += "_" + QString::number(scale) + "_" + QString::number(tetraResolution);
         TetraBody* body = new TetraBody((filename + ".tetra").toStdString().c_str(), mesh, "sphere", m_totalMass, 500, tetraResolution, true, 0.98, 2);
 
         //    body->addVelocity(Eigen::Vector3f(10,0,0));
@@ -286,9 +305,16 @@ void Viewer::testSceneDeformableBlock()
 {
     if(!m_init)
     {
-        m_dt = 0.01;
+        m_demoName = "DeformableBlock";
+        m_videoFps = 24;
+        m_dt = (1.0/m_videoFps);
         m_iterations = 3;
-        m_totalMass = 0.1;
+        m_totalMass = 5;
+
+        setStateFileName(QString(PROJECT_FOLDER) + "/" + m_demoName);
+        restoreStateFromFile();
+
+        std::cout << "Loaded state " << this->stateFileName().toStdString() << std::endl;
 
         m_init = true;
     }
@@ -297,7 +323,7 @@ void Viewer::testSceneDeformableBlock()
     glBlendFunc(GL_ONE, GL_ONE);
 
     int tetraResolution = 10;
-    float scale = 0.013;
+    float scale = 0.25;
     float leftVertsThreshold = 0.001;
     LA::Bounds3d bbox(LA::Vector3(-1,-1,-1), LA::Vector3(leftVertsThreshold, 1, 1));
     QString triFilename = "/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv.obj";
@@ -324,9 +350,9 @@ void Viewer::testSceneDeformableBlock()
     {
         TriMesh* mesh = TriMesh::ReadFromFile(triFilename.toStdString().c_str(), TriMesh::OBJ, scale);
         std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
-        mesh->Transform(LA::Vector3(0,0,-0.03), LA::Quaternion(0,1,0,0));
+        mesh->Transform(LA::Vector3(0,0,-1), LA::Quaternion(0,1,0,0));
 
-        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 1000, tetraResolution, false, 0.99, 1, 1.0, LA::Vector3(0,0,-0.03));
+        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 1000, tetraResolution, false, 0.99, 1, 1.0, LA::Vector3(0,0,-1));
 
 
         for(int i=0;i<leftVertices.size();++i)
@@ -340,9 +366,9 @@ void Viewer::testSceneDeformableBlock()
     {
         TriMesh* mesh = TriMesh::ReadFromFile(triFilename.toStdString().c_str(), TriMesh::OBJ, scale);
         std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
-        mesh->Transform(LA::Vector3(0,0,-0.06), LA::Quaternion(0,1,0,0));
+        mesh->Transform(LA::Vector3(0,0,-2), LA::Quaternion(0,1,0,0));
 
-        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 10000, tetraResolution, false, 0.99, 1, 1.0, LA::Vector3(0,0,-0.06));
+        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 10000, tetraResolution, false, 0.99, 1, 1.0, LA::Vector3(0,0,-2));
 
 
         for(int i=0;i<leftVertices.size();++i)
@@ -360,6 +386,7 @@ void Viewer::testSceneDeformableBlockDropping()
 {
     if(!m_init)
     {
+        m_demoName = "DeformableBlockDropping";
         m_dt = 0.001;
         m_iterations = 3;
 
@@ -391,6 +418,7 @@ void Viewer::testSceneSingleSpring()
 {
     if(!m_init)
     {
+        m_demoName = "SingleSpring";
         m_videoFps = 24;
         m_dt = (1.0/m_videoFps);
         m_springStiffness = 100;
@@ -423,9 +451,6 @@ void Viewer::draw()
         for(int i=0;i<m_bodies.size();++i)
             m_bodies[i]->draw();
     }
-
-//    m_tetraCloth->draw();
-//    m_triCloth->Draw();
 
     glDisable(GL_LIGHTING);
     if(m_drawSimulationPoints)
@@ -574,6 +599,14 @@ void Viewer::keyPressEvent(QKeyEvent *key)
         }
         else
             m_saveVideo = true;
+    }
+    else if(key->text() == "c")
+    {
+        this->saveStateToFile();
+    }
+    else if(key->text() == "x")
+    {
+        this->restoreStateFromFile();
     }
     else
         QGLViewer::keyPressEvent(key);
@@ -736,7 +769,7 @@ Viewer::Viewer(QWidget *parent) : QGLViewer(parent)
     m_move = false;
 
     m_drawMeshes = true;
-    m_drawSimulationPoints = false;
+    m_drawSimulationPoints = true;
     m_meshRows = 10;
     m_meshColumns = 10;
     m_meshSize = 1;

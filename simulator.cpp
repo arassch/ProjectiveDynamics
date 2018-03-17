@@ -211,6 +211,9 @@ void Simulator::advanceTime()
         indepRhs[1].resize(m_constraints.size());
         indepRhs[2].resize(m_constraints.size());
 
+        std::vector<std::vector<Eigen::Vector3f> > indepProjected;
+        indepProjected.resize(m_constraints.size());
+
 #pragma omp parallel for
         for(int i=0;i<m_constraints.size(); ++ i)
         {
@@ -230,6 +233,7 @@ void Simulator::advanceTime()
 //            {
 //            m_projected.insert(m_projected.end(), p.begin(), p.end());
 //            }
+            indepProjected[i].insert(indepProjected[i].end(), p.begin(), p.end());
 
             Eigen::MatrixXf Ai = c->getAMatrix();
             Eigen::MatrixXf Bi = c->getBMatrix();
@@ -267,6 +271,8 @@ void Simulator::advanceTime()
             rhs[0] += indepRhs[0][i];
             rhs[1] += indepRhs[1][i];
             rhs[2] += indepRhs[2][i];
+
+            m_projected.insert(m_projected.end(), indepProjected[i].begin(), indepProjected[i].end());
         }
 
         Eigen::SparseMatrix<float> collisionsLHS[3];

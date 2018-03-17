@@ -50,6 +50,8 @@ protected:
 public:
     Viewer(QWidget *parent);
 
+    QString m_demoName;
+
     bool m_drawMeshes;
     bool m_drawSimulationPoints;
     int m_meshRows, m_meshColumns;
