@@ -9,8 +9,6 @@
 #include <opencv2/highgui/highgui.hpp>  // Video write
 
 #include <TriMesh.h>
-#include <TetraMesh.h>
-#include <ContactWorld.h>
 
 #include "simulator.h"
 
@@ -27,7 +25,7 @@ class Viewer : public QGLViewer {
     void testSceneDeformableSphere();
     void testSceneDeformableBlock();
     void testSceneDeformableBlockDropping();
-
+    void testSceneSingleSpring();
 
 
 
@@ -75,9 +73,6 @@ private:
 
 
     Simulator *m_simulator;
-    ContactWorld *m_contactWorld;
-    TetraMesh *m_tetraCloth;
-    TriMesh *m_triCloth;
 
     bool m_play;
     bool m_step;

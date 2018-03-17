@@ -18,6 +18,14 @@
 TEMPLATE = app
 TARGET   = projectiveDynamics
 
+QMAKE_CC = clang-omp
+QMAKE_CXX = clang++-omp
+QMAKE_LINK = clang++-omp
+
+QMAKE_CXXFLAGS += -fopenmp
+QMAKE_LFLAGS += -fopenmp
+LIBS += -L/usr/local/Cellar/llvm/5.0.0/lib/ -liomp5
+
 HEADERS  = \
     viewer.h \
     springConstraint.h \
@@ -30,7 +38,8 @@ HEADERS  = \
     staticBody.h \
     projectiveConstraint.h \
     tetraBody.h \
-    viewerInterface.h
+    viewerInterface.h \
+    hairBody.h
 SOURCES  = main.cpp \
     viewer.cpp \
     springConstraint.cpp \
@@ -40,7 +49,8 @@ SOURCES  = main.cpp \
     tetraConstraint.cpp \
     springBody.cpp \
     tetraBody.cpp \
-    viewerInterface.cpp
+    viewerInterface.cpp \
+    hairBody.cpp
 
 FORMS *= viewerInterface.ui
 

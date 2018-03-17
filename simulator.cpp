@@ -1,4 +1,5 @@
 #include <set>
+#include <omp.h>
 
 #include "simulator.h"
 #include "utils.h"
@@ -7,6 +8,11 @@
 
 Simulator::Simulator(float dt, int iterations, std::vector<ProjectiveBody*> &bodies, float collisionStiffness)
 {
+//    omp_set_num_threads(1);
+
+    std::cout << "Max num threads: " << omp_get_max_threads() << std::endl;
+    Eigen::initParallel();
+
     initialize(dt, iterations, bodies, collisionStiffness);
 }
 
@@ -158,6 +164,9 @@ void Simulator::advanceTime()
 
         for(int j=i+1; j<m_bodies.size(); ++j)
         {
+            if(!m_bodies[i]->getCCDHandler() || !m_bodies[j]->getCCDHandler())
+                continue;
+
             vector<CollisionInfo*> newCollisions = CDQueries::HashQuery(m_bodies[i]->getCCDHandler(), m_bodies[j]->getCCDHandler(), false);
             std::set<std::pair<int, int> > collisionsFound;
             for(int k=0; k<newCollisions.size(); ++k)
@@ -197,28 +206,38 @@ void Simulator::advanceTime()
 
         myTimer.restart();
 
+        std::vector<Eigen::VectorXf> indepRhs[3];
+        indepRhs[0].resize(m_constraints.size());
+        indepRhs[1].resize(m_constraints.size());
+        indepRhs[2].resize(m_constraints.size());
+
 #pragma omp parallel for
         for(int i=0;i<m_constraints.size(); ++ i)
         {
             ProjectiveConstraint *c = m_constraints[i];
+            int bodyIndex = m_bodyToIndex[c->m_body];
 
             std::vector<Eigen::Vector3f> q, p;
             for(int j=0; j<c->m_numParticles; ++j)
             {
-                Eigen::Vector3f qpos = toEigenVector3(m_q[0], m_q[1], m_q[2], m_bodyToIndex[c->m_body] + c->getVIndex(j));
+                Eigen::Vector3f qpos = toEigenVector3(m_q[0], m_q[1], m_q[2], bodyIndex + c->getVIndex(j));
                 q.push_back(qpos);
             }
 
             c->project(q, p);
 
-            m_projected.insert(m_projected.end(), p.begin(), p.end());
+//#pragma omp critical
+//            {
+//            m_projected.insert(m_projected.end(), p.begin(), p.end());
+//            }
 
             Eigen::MatrixXf Ai = c->getAMatrix();
             Eigen::MatrixXf Bi = c->getBMatrix();
 
-            Eigen::SparseMatrix<float> SiX = c->getSMatrix(m_numParticles, m_bodyToIndex[c->m_body], 0);
-            Eigen::SparseMatrix<float> SiY = c->getSMatrix(m_numParticles, m_bodyToIndex[c->m_body], 1);
-            Eigen::SparseMatrix<float> SiZ = c->getSMatrix(m_numParticles, m_bodyToIndex[c->m_body], 2);
+
+            Eigen::SparseMatrix<float> SiX = c->getSMatrix(m_numParticles, bodyIndex, 0);
+            Eigen::SparseMatrix<float> SiY = c->getSMatrix(m_numParticles, bodyIndex, 1);
+            Eigen::SparseMatrix<float> SiZ = c->getSMatrix(m_numParticles, bodyIndex, 2);
 
 
             std::vector<Eigen::VectorXf> pdim(3);
@@ -232,12 +251,22 @@ void Simulator::advanceTime()
                     pdim[k][j] = p[j][k];
             }
 
-#pragma omp critical
-            {
-                rhs[0] += c->m_stiffness * SiX.transpose() * Ai.transpose() * Bi * pdim[0];
-                rhs[1] += c->m_stiffness * SiY.transpose() * Ai.transpose() * Bi * pdim[1];
-                rhs[2] += c->m_stiffness * SiZ.transpose() * Ai.transpose() * Bi * pdim[2];
-            }
+//#pragma omp critical
+//            {
+//                rhs[0] += c->m_stiffness * SiX.transpose() * Ai.transpose() * Bi * pdim[0];
+//                rhs[1] += c->m_stiffness * SiY.transpose() * Ai.transpose() * Bi * pdim[1];
+//                rhs[2] += c->m_stiffness * SiZ.transpose() * Ai.transpose() * Bi * pdim[2];
+//            }
+            indepRhs[0][i] = c->m_stiffness * SiX.transpose() * Ai.transpose() * Bi * pdim[0];
+            indepRhs[1][i] = c->m_stiffness * SiY.transpose() * Ai.transpose() * Bi * pdim[1];
+            indepRhs[2][i] = c->m_stiffness * SiZ.transpose() * Ai.transpose() * Bi * pdim[2];
+        }
+
+        for(int i=0;i<m_constraints.size(); ++ i)
+        {
+            rhs[0] += indepRhs[0][i];
+            rhs[1] += indepRhs[1][i];
+            rhs[2] += indepRhs[2][i];
         }
 
         Eigen::SparseMatrix<float> collisionsLHS[3];

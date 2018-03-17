@@ -15,6 +15,7 @@
 #include "utils.h"
 #include "staticBody.h"
 #include "tetraBody.h"
+#include <hairBody.h>
 
 
 using namespace qglviewer;
@@ -23,6 +24,7 @@ using namespace std;
 ///////////////////////   V i e w e r  ///////////////////////
 void Viewer::init()
 {
+
     restoreStateFromFile();
     glDisable(GL_LIGHTING);
 
@@ -35,6 +37,7 @@ void Viewer::init()
 //    testSceneDeformableSphere();
 //    testSceneDeformableBlock();
 //    testSceneDeformableBlockDropping();
+//    testSceneSingleSpring();
 
     m_simulator = new Simulator(m_dt, m_iterations, m_bodies, m_collisionStiffness);
 
@@ -55,10 +58,10 @@ void Viewer::testSceneClothOnStaticBody()
     {
         m_videoFps = 24;
         m_dt = 0.1*(1.0/m_videoFps);
-        m_meshRows = 30;
-        m_meshColumns = 30;
+        m_meshRows = 15;
+        m_meshColumns = 15;
         m_meshSize = 1.4;
-        m_springStiffness = 500;
+        m_springStiffness = 100;
         m_iterations = 5;
         m_totalMass = 1;
         m_restitution = 0.5;
@@ -73,8 +76,6 @@ void Viewer::testSceneClothOnStaticBody()
     TriMesh* mesh = TriMesh::CreatePatchMesh(rows, cols, meshCellSize);
     mesh->Transform(Vector3(0,1,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(1,0,0)));
 //    m_mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(M_PI_4, Vector3(0,0,1)));
-
-
 
 
 
@@ -116,10 +117,10 @@ void Viewer::testSceneClothConstrainedTopCorners()
     {
         m_videoFps = 24;
         m_dt = (1.0/m_videoFps);
-        m_meshRows = 2;
-        m_meshColumns = 2;
+        m_meshRows = 15;
+        m_meshColumns = 15;
         m_meshSize = 1.4;
-        m_springStiffness = 10;
+        m_springStiffness = 100;
         m_iterations = 5;
         m_totalMass = 2;
         m_restitution = 1;
@@ -152,7 +153,7 @@ void Viewer::testSceneClothConstrainedCorners()
 {
     if(!m_init)
     {
-        m_videoFps = 25;
+        m_videoFps = 24;
         m_dt = (1.0/m_videoFps);
         m_iterations = 10;
         m_springStiffness = 10;
@@ -386,6 +387,35 @@ void Viewer::testSceneDeformableBlockDropping()
     m_bodies.push_back(floor);
 }
 
+void Viewer::testSceneSingleSpring()
+{
+    if(!m_init)
+    {
+        m_videoFps = 24;
+        m_dt = (1.0/m_videoFps);
+        m_springStiffness = 100;
+        m_iterations = 5;
+        m_totalMass = 1;
+        m_damping = 0.99;
+
+        m_init = true;
+    }
+
+    std::vector<Eigen::Vector3f> controlPoints;
+    controlPoints.push_back(Eigen::Vector3f(0,0,0));
+    controlPoints.push_back(Eigen::Vector3f(0,-0.1,0));
+
+
+    glPointSize(10.0);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+    HairBody* body = new HairBody(controlPoints, "spring", m_totalMass, m_springStiffness, m_damping, m_restitution);
+    body->addPositionConstraint(m_positionStiffness, 0);
+
+    m_bodies.push_back(body);
+
+}
+
 void Viewer::draw()
 {
     if(m_drawMeshes)
@@ -478,10 +508,7 @@ void Viewer::animate()
         m_simulator->advanceTime();
         m_currentTime += m_simulator->m_dt;
 
-//        m_contactWorld->AdvanceDynamics();
-//        m_triCloth->ComputePositions();
-
-        std::cout << "animate " << m_currentTime << std::endl;
+//        std::cout << "animate " << m_currentTime << std::endl;
 
         if(m_saveVideo && (m_currentTime - m_timeOfLastImage >= 1.0/m_videoFps || !m_videoWriter.isOpened()))
         {
@@ -816,7 +843,8 @@ void Viewer::makeVideo()
     {
         m_videoName = QFileDialog::getSaveFileName(this, tr("Save File"),
                                                    QString(PROJECT_FOLDER),
-                                                   tr("Videos (*.avi)")).toStdString();
+                                                   tr("Videos (*.avi)"), nullptr,
+                                                   QFileDialog::Option::DontUseNativeDialog).toStdString();
         if(m_videoName.length() > 0)
         {
             m_saveVideo = true;
