@@ -312,7 +312,6 @@ void Viewer::testSceneDeformableBlock()
 
         TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 100, tetraResolution, false, 0.99, 1);
 
-
         for(int i=0;i<leftVertices.size();++i)
         {
             body->addPositionConstraint(m_positionStiffness, leftVertices[i]->Id());
