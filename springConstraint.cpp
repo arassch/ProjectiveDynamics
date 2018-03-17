@@ -6,7 +6,17 @@ SpringConstraint::SpringConstraint(ProjectiveBody *body, float stiffness, Eigen:
     ProjectiveConstraint(body, stiffness, 2), m_vIndex1(vIndex1), m_vIndex2(vIndex2)
 {
     m_restLength = (p1-p2).norm();
+    m_fixed1 = false;
+    m_fixed2 = false;
 
+}
+
+void SpringConstraint::setFixed(int index)
+{
+    if(index == m_vIndex1)
+        m_fixed1 = true;
+    else if(index == m_vIndex2)
+        m_fixed2 = true;
 }
 
 void SpringConstraint::project(std::vector<Eigen::Vector3f> q, std::vector<Eigen::Vector3f>& p)
@@ -14,11 +24,32 @@ void SpringConstraint::project(std::vector<Eigen::Vector3f> q, std::vector<Eigen
     assert(q.size() == 2);
     p.resize(2);
 
-    float l = (q[0]-q[1]).norm();
-    float offset = (l - m_restLength)/2.0;
-
     Eigen::Vector3f v = (q[1] - q[0]);
     v.normalize();
+
+
+    if(m_fixed1 && m_fixed2)
+    {
+        p[0] = q[0];
+        p[1] = q[1];
+        return;
+    }
+
+    if(m_fixed1)
+    {
+        p[0] = q[0];
+        p[1] = q[0] + m_restLength * v;
+        return;
+    }
+    if(m_fixed2)
+    {
+        p[1] = q[1];
+        p[0] = q[1] - m_restLength * v;
+        return;
+    }
+
+    float l = (q[0]-q[1]).norm();
+    float offset = (l - m_restLength)/2.0;
     p[0] = q[0] + offset * v;
     p[1] = q[1] - offset * v;
 }

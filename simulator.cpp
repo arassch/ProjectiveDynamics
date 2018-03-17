@@ -35,17 +35,15 @@ void Simulator::initialize(float dt, int iterations, vector<ProjectiveBody*> &bo
         totalNumParticles += bodies[i]->getNumParticles();
     }
 
-//    for(auto it = m_bodyToIndex.begin(); it!=m_bodyToIndex.end(); ++it)
-//    {
-//        std::cout << it->first << " " << it->second << std::endl;
-//    }
-
     m_q[0].resize(totalNumParticles);
     m_q[1].resize(totalNumParticles);
     m_q[2].resize(totalNumParticles);
     m_v[0].resize(totalNumParticles);
     m_v[1].resize(totalNumParticles);
     m_v[2].resize(totalNumParticles);
+    m_v[0].setZero();
+    m_v[1].setZero();
+    m_v[2].setZero();
     m_particleMass.resize(totalNumParticles);
 
     for(int i=0; i<bodies.size(); ++i)
@@ -54,19 +52,19 @@ void Simulator::initialize(float dt, int iterations, vector<ProjectiveBody*> &bo
         if(bodies[i]->getNumParticles() > 0)
         {
             Eigen::VectorXf pos = bodies[i]->getPositions();
-            Eigen::VectorXf vel = bodies[i]->getVelocities(m_dt);
+//            Eigen::VectorXf vel = bodies[i]->getVelocities(m_dt);
             for(int j=0; j<pos.rows()/3; ++j)
             {
                 m_q[0][bodyIndex+j] = pos[j*3+0];
                 m_q[1][bodyIndex+j] = pos[j*3+1];
                 m_q[2][bodyIndex+j] = pos[j*3+2];
             }
-            for(int j=0; j<vel.rows()/3; ++j)
-            {
-                m_v[0][bodyIndex+j] = vel[j*3+0];
-                m_v[1][bodyIndex+j] = vel[j*3+1];
-                m_v[2][bodyIndex+j] = vel[j*3+2];
-            }
+//            for(int j=0; j<vel.rows()/3; ++j)
+//            {
+//                m_v[0][bodyIndex+j] = vel[j*3+0];
+//                m_v[1][bodyIndex+j] = vel[j*3+1];
+//                m_v[2][bodyIndex+j] = vel[j*3+2];
+//            }
             m_particleMass.segment(m_bodyToIndex[bodies[i]], bodies[i]->getNumParticles()) = bodies[i]->getParticleMassVector();
             std::vector<ProjectiveConstraint*> constraints = bodies[i]->getConstraints();
             m_constraints.insert(m_constraints.end(), constraints.begin(), constraints.end());
@@ -74,7 +72,7 @@ void Simulator::initialize(float dt, int iterations, vector<ProjectiveBody*> &bo
 
     }
 
-    m_numParticles = m_q[0].rows();
+    m_numParticles = totalNumParticles;
 
     m_massMatrix = m_particleMass.asDiagonal();
     m_massMatrixInv = m_massMatrix.inverse();
@@ -105,7 +103,8 @@ void Simulator::initialize(float dt, int iterations, vector<ProjectiveBody*> &bo
     m_fext[0].resize(m_numParticles);
     m_fext[0].setZero();
     m_fext[1].resize(m_numParticles);
-    m_fext[1].setConstant(-9.8);
+    for(int i=0;i<totalNumParticles;++i)
+        m_fext[1][i] = -9.8 * m_particleMass[i];
     m_fext[2].resize(m_numParticles);
     m_fext[2].setZero();
 
@@ -395,5 +394,5 @@ void Simulator::advanceTime()
         m_v[2][index] = vReflect[2];
     }
 
-//    cout << "Total Time: " << myTotalTimer.elapsed() << endl;
+    cout << "Total Time: " << myTotalTimer.elapsed() << endl;
 }

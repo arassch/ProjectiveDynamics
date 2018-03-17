@@ -10,6 +10,7 @@
 
 #include <TriMesh.h>
 #include <TetraMesh.h>
+#include <ContactWorld.h>
 
 #include "simulator.h"
 
@@ -26,6 +27,10 @@ class Viewer : public QGLViewer {
     void testSceneDeformableSphere();
     void testSceneDeformableBlock();
     void testSceneDeformableBlockDropping();
+
+
+
+
 
 protected:
     virtual void draw();
@@ -53,11 +58,16 @@ public:
     double m_meshSize;
     float m_dt;
     double m_totalMass;
+    double m_restitution;
+    double m_damping;
     int m_iterations;
     double m_springStiffness;
     double m_tetraStiffness;
     double m_collisionStiffness;
     double m_positionStiffness;
+
+
+
 
 private:
 
@@ -65,6 +75,9 @@ private:
 
 
     Simulator *m_simulator;
+    ContactWorld *m_contactWorld;
+    TetraMesh *m_tetraCloth;
+    TriMesh *m_triCloth;
 
     bool m_play;
     bool m_step;
@@ -75,6 +88,7 @@ private:
     cv::VideoWriter m_videoWriter;
     float m_videoFps;
     float m_timeOfLastImage;
+    float m_videoTotalTime;
 
 
     enum SelectionMode { NONE, ADD, REMOVE };

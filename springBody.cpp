@@ -19,6 +19,28 @@ SpringBody::SpringBody(TriMesh *mesh, std::string name, float totalMass, float s
         SpringConstraint *c = new SpringConstraint(this, springStiffness, p1, p2, v1, v2);
         m_springConstraints.push_back(c);
 
+        {
+            auto it = m_indexToSpring.find(v1);
+            if (it != m_indexToSpring.end())
+                it->second.push_back(c);
+            else
+            {
+                std::vector<SpringConstraint*> vec;
+                vec.push_back(c);
+                m_indexToSpring[v1] = vec;
+            }
+
+            it = m_indexToSpring.find(v2);
+            if (it != m_indexToSpring.end())
+                it->second.push_back(c);
+            else
+            {
+                std::vector<SpringConstraint*> vec;
+                vec.push_back(c);
+                m_indexToSpring[v2] = vec;
+            }
+        }
+
         if(addExtraSprings)
         {
             if(edge->IsBoundary())
@@ -46,6 +68,28 @@ SpringBody::SpringBody(TriMesh *mesh, std::string name, float totalMass, float s
 
                 SpringConstraint *c = new SpringConstraint(this, springStiffness, p1, p2, v1, v2);
                 m_springConstraints.push_back(c);
+
+                {
+                    auto it = m_indexToSpring.find(v1);
+                    if (it != m_indexToSpring.end())
+                        it->second.push_back(c);
+                    else
+                    {
+                        std::vector<SpringConstraint*> vec;
+                        vec.push_back(c);
+                        m_indexToSpring[v1] = vec;
+                    }
+
+                    it = m_indexToSpring.find(v2);
+                    if (it != m_indexToSpring.end())
+                        it->second.push_back(c);
+                    else
+                    {
+                        std::vector<SpringConstraint*> vec;
+                        vec.push_back(c);
+                        m_indexToSpring[v2] = vec;
+                    }
+                }
             }
         }
     }
@@ -105,6 +149,14 @@ void SpringBody::addPositionConstraint(float stiffness, int vIndex)
     Eigen::Vector3f p = toEigenVector3(m_mesh->Vertices()[vIndex]->Position());
     PositionConstraint *c = new PositionConstraint(this, stiffness, p, vIndex);
     m_positionConstraints.push_back(c);
+
+    auto it = m_indexToSpring.find(vIndex);
+    if(it != m_indexToSpring.end())
+    {
+        std::vector<SpringConstraint*> v = it->second;
+        for(int i=0;i<v.size();++i)
+            v[i]->setFixed(vIndex);
+    }
 }
 
 std::vector<PositionConstraint> SpringBody::getPositionConstraints(float stiffness, int vIndex, Eigen::Vector3f &position)

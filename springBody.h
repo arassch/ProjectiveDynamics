@@ -18,6 +18,8 @@ class SpringBody : public ProjectiveBody
 
     std::vector<PositionConstraint*> m_positionConstraints;
 
+    std::map<int, std::vector<SpringConstraint*> > m_indexToSpring;
+
 public:
     SpringBody(TriMesh* mesh, std::string name, float totalMass, float springStiffness, bool addExtraSprings=false, float maxDistance=0,
                float damping=0.95, float restitution=1);

@@ -101,11 +101,17 @@ INCLUDEPATH += $$PWD/../../ElasticFEM/CDQueries/inc
 
 
 ### RigidBody
-#LIBS += -L$$PWD/../../ElasticFEM/build-RigidBody-Desktop-Release/ -lRigidBody
+#CONFIG(debug, debug|release) {
+#    LIBS += -L$$PWD/../../ElasticFEM/build-RigidBody-Desktop-Debug/ -lRigidBody
+#    DEPENDPATH += $$PWD/../../ElasticFEM/build-RigidBody-Desktop-Debug
+#    PRE_TARGETDEPS += $$PWD/../../ElasticFEM/build-RigidBody-Desktop-Debug/libRigidBody.a
+#}
+#else {
+#    LIBS += -L$$PWD/../../ElasticFEM/build-RigidBody-Desktop-Release/ -lRigidBody
+#    DEPENDPATH += $$PWD/../../ElasticFEM/build-RigidBody-Desktop-Release
+#    PRE_TARGETDEPS += $$PWD/../../ElasticFEM/build-RigidBody-Desktop-Release/libRigidBody.a
+#}
 #INCLUDEPATH += $$PWD/../../ElasticFEM/RigidBody/inc
-#DEPENDPATH += $$PWD/../../ElasticFEM/build-RigidBody-Desktop-Release
-#PRE_TARGETDEPS += $$PWD/../../ElasticFEM/build-RigidBody-Desktop-Release/libRigidBody.a
-
 
 ## Contact
 CONFIG(debug, debug|release) {
