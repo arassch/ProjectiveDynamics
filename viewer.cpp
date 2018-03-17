@@ -31,13 +31,14 @@ void Viewer::init()
     m_bodies.clear();
 
 //    testSceneClothOnStaticBody();
-//    testSceneClothConstrainedTopCorners();
-    testSceneClothConstrainedCorners();
+    testSceneClothConstrainedTopCorners();
+//    testSceneClothConstrainedCorners();
 //    testSceneClothDropping();
 //    testSceneDeformableSphere();
 //    testSceneDeformableBlock();
 //    testSceneDeformableBlockDropping();
 //    testSceneSingleSpring();
+
 
 
 
@@ -123,15 +124,14 @@ void Viewer::testSceneClothConstrainedTopCorners()
     {
         m_demoName = "ClothConstrainedTopCorners";
         m_videoFps = 24;
-        m_dt = (1.0/m_videoFps);
+        m_dt = 0.01;
         m_meshRows = 15;
         m_meshColumns = 15;
         m_meshSize = 1.4;
         m_springStiffness = 100;
         m_iterations = 5;
         m_totalMass = 2;
-        m_restitution = 1;
-        m_damping = 1;
+        m_damping = 0.99;
 
         setStateFileName(QString(PROJECT_FOLDER) + "/" + m_demoName);
         restoreStateFromFile();
@@ -165,12 +165,12 @@ void Viewer::testSceneClothConstrainedCorners()
     {
         m_demoName = "ClothConstrainedCorners";
         m_videoFps = 24;
-        m_dt = (1.0/m_videoFps);
-        m_iterations = 3;
-        m_springStiffness = 10;
+        m_dt = 0.01;
+        m_iterations = 2;
+        m_springStiffness = 500;
         m_totalMass = 1;
         m_meshSize = 1.4;
-        m_damping = 1;
+        m_damping = 0.99;
         m_meshRows=15;
         m_meshColumns=15;
 
@@ -533,9 +533,7 @@ void Viewer::animate()
         m_simulator->advanceTime();
         m_currentTime += m_simulator->m_dt;
 
-//        std::cout << "animate " << m_currentTime << std::endl;
-
-        if(m_saveVideo && (m_currentTime - m_timeOfLastImage >= 1.0/m_videoFps || !m_videoWriter.isOpened()))
+        if(m_saveVideo && (m_currentTime - m_timeOfLastImage - 1.0/m_videoFps > 0.0001 || !m_videoWriter.isOpened()))
         {
             repaint();
             QImage img = this->grab().toImage();
@@ -788,6 +786,7 @@ Viewer::Viewer(QWidget *parent) : QGLViewer(parent)
     m_simulator = 0;
 
     m_saveVideo = false;
+
 }
 
 void Viewer::reset()
@@ -887,6 +886,39 @@ void Viewer::makeVideo()
         }
     }
 
+}
+
+void Viewer::saveVideoImage()
+{
+//    if(m_saveVideo)
+//    {
+//        std::cout << m_currentTime - m_timeOfLastImage << " - " << 1.0/m_videoFps << " = " << (m_currentTime - m_timeOfLastImage - 1.0/m_videoFps) << std::endl;
+//    }
+
+//    if(m_saveVideo && (fabs(m_currentTime - m_timeOfLastImage - 1.0/m_videoFps) < 0.0001 || !m_videoWriter.isOpened()))
+//    {
+//        repaint();
+//        QImage img = this->grab().toImage();
+//        cv::Mat mat = qImageToCVMat(img);
+
+//        if(!m_videoWriter.isOpened())
+//        {
+//            std::cout << "Writting video" << std::endl;
+//            m_videoWriter.open(m_videoName.c_str(),CV_FOURCC('M','J','P','G'), m_videoFps, cv::Size(mat.cols,mat.rows),true);
+//            m_frame = 0;
+//        }
+//        else
+//            m_videoTotalTime += 1.0/m_videoFps;
+//        m_videoWriter.write(mat);
+//        m_timeOfLastImage = m_currentTime;
+
+//        QString imageFile = QString(PROJECT_FOLDER) + "/video/frame" + QString("%1").arg(m_frame, 4, 10, QChar('0')) + ".png";
+//        std::cout << imageFile.toStdString() << std::endl;
+//        img.save(imageFile);
+//        m_frame++;
+
+//        std::cout << "Video total time: " << m_videoTotalTime << std::endl;
+//    }
 }
 
 

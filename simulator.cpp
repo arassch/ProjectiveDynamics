@@ -429,5 +429,5 @@ void Simulator::advanceTime()
         m_v[2][index] = vReflect[2];
     }
 
-    cout << "Total Time: " << myTotalTimer.elapsed() << endl;
+//    cout << "Total Time: " << myTotalTimer.elapsed() << endl;
 }

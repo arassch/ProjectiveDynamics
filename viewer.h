@@ -120,6 +120,7 @@ public Q_SLOTS:
     void changePositionStiffness(double val);
     void changeCollisionStiffness(double val);
     void makeVideo();
+    void saveVideoImage();
 
 
 };
