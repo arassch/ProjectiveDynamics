@@ -21,6 +21,7 @@ class Simulator
 {
 public:
     int m_numParticles;
+    int m_numConstraints;
 
     vector<ProjectiveBody*> m_bodies;
     map<ProjectiveBody*, int> m_bodyToIndex;
@@ -57,9 +58,13 @@ public:
     Eigen::SparseMatrix<float> m_Lhs[3];
     Eigen::SimplicialCholesky<Eigen::SparseMatrix<float> > m_cholesky[3];
 
+    int m_timeStart;
     int m_timeCollisionDetection;
     int m_timeLocalSolve;
     int m_timeGlobalSolve;
+    int m_timeSetPositions;
+    int m_timeFinish;
+    int m_timeTotal;
 
 
 
@@ -70,6 +75,7 @@ public:
 
     std::vector<Eigen::Vector3f> m_projected;
     std::vector<Eigen::Vector3f> m_projectedCollisions;
+    std::vector<pair<Eigen::Vector3f, Eigen::Vector3f> > m_normalsCollisions;
     std::vector<ProjectiveConstraint*> m_constraints;
     float m_collisionStiffness;
 
@@ -80,6 +86,8 @@ public:
     void initialize(float dt, int iterations, vector<ProjectiveBody*> &bodies, float collisionStiffness);
 
     void advanceTime();
+
+    void detectCollisions();
 
 
     vector<Collision> getCollisions() const { return m_collisions; }

@@ -30,8 +30,8 @@ void Viewer::init()
 
     m_bodies.clear();
 
-//    testSceneClothOnStaticBody();
-    testSceneClothConstrainedTopCorners();
+    testSceneClothOnStaticBody();
+//    testSceneClothConstrainedTopCorners();
 //    testSceneClothConstrainedCorners();
 //    testSceneClothDropping();
 //    testSceneDeformableSphere();
@@ -61,14 +61,15 @@ void Viewer::testSceneClothOnStaticBody()
     {
         m_demoName = "ClothOnStaticBody";
         m_videoFps = 24;
-        m_dt = 0.1*(1.0/m_videoFps);
-        m_meshRows = 15;
-        m_meshColumns = 15;
+        m_dt = 0.005;
+        m_meshRows = 25;
+        m_meshColumns = 25;
         m_meshSize = 1.4;
-        m_springStiffness = 100;
-        m_iterations = 5;
-        m_totalMass = 1;
-        m_restitution = 0.5;
+        m_springStiffness = 50;
+        m_collisionStiffness = 200;
+        m_iterations = 2;
+        m_totalMass = 2;
+        m_restitution = 0.0;
         m_damping = 0.99;
 
         setStateFileName(QString(PROJECT_FOLDER) + "/" + m_demoName);
@@ -81,37 +82,19 @@ void Viewer::testSceneClothOnStaticBody()
     int cols = m_meshColumns;
     float meshCellSize = m_meshSize/m_meshRows;
     TriMesh* mesh = TriMesh::CreatePatchMesh(rows, cols, meshCellSize);
-    mesh->Transform(Vector3(0,1,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(1,0,0)));
+    mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(1,0,0)));
 //    m_mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(M_PI_4, Vector3(0,0,1)));
-
 
 
     glPointSize(10.0);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    SpringBody* body = new SpringBody(mesh, "cloth", m_totalMass, m_springStiffness, true, 1.01*2*meshCellSize*meshCellSize, m_damping, m_restitution);
+    SpringBody* body = new SpringBody(mesh, "cloth", m_totalMass, m_springStiffness, false, 1.01*2*meshCellSize*meshCellSize, m_damping, m_restitution);
 
     m_bodies.push_back(body);
 
-
-//    m_triCloth = TriMesh::CreatePatchMesh(rows, cols, meshCellSize);
-//    m_triCloth->Transform(Vector3(0,0.15,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(1,0,0)));
-//    m_tetraCloth = TetraMesh::CreateEmbeddingMesh(2, m_triCloth, true);
-//    m_tetraCloth->LinkTriMesh(m_triCloth);
-//    m_tetraCloth->init();
-
-//    m_contactWorld = new ContactWorld();
-//    m_contactWorld->addObject(m_tetraCloth);
-//    ContactConfig::SetGlobalTimeStepInMicroSecs(m_dt*1e-6);
-
-    // static bodies
-
-    // bunny
-//    TriMesh *rb = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/bunny.obj", TriMesh::OBJ, 2.0f);
-//    rb->Transform(Vector3(0,0.0,0), LA::Quaternion::FromAngleAxis(M_PI_2, Vector3(-1,0,0)));
-
     //sphere
-    TriMesh *rb = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphere.obj", TriMesh::OBJ, 0.3);
+    TriMesh *rb = TriMesh::ReadFromFile("/Users/sarac.schvartzman/Dropbox/Code/sphereSubdiv.obj", TriMesh::OBJ, 0.3);
     rb->Translate(0,-0.7, 0);
 
     StaticBody* staticBody = new StaticBody(rb, "floor");
@@ -513,10 +496,24 @@ void Viewer::draw()
                 }
             }
         }
+
+        glColor3f(1,0,0);
+        for(unsigned int i=0; i< m_simulator->m_normalsCollisions.size(); ++i)
+        {
+            glVertex3f(m_simulator->m_normalsCollisions[i].first[0],
+                    m_simulator->m_normalsCollisions[i].first[1],
+                    m_simulator->m_normalsCollisions[i].first[2]);
+            Eigen::Vector3f p2 = m_simulator->m_normalsCollisions[i].first + m_simulator->m_normalsCollisions[i].second*0.1;
+            glVertex3f(p2[0], p2[1], p2[2]);
+
+
+        }
         glEnd();
 
     }
     glEnable(GL_LIGHTING);
+
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
 
     // Draws rectangular selection area. Could be done in postDraw() instead.
 //    if (m_selectionMode != NONE)
@@ -524,6 +521,39 @@ void Viewer::draw()
 
 //    std::cout << "draw" << std::endl;
 
+    QFont font;
+    QFontMetrics fm(font);
+    int pixelHeight = fm.height();
+
+    std::vector<std::pair<QString, int> > times;
+    times.push_back(make_pair("timeStart", m_simulator->m_timeStart));
+    times.push_back(make_pair("timeCollisionDetection", m_simulator->m_timeCollisionDetection));
+    times.push_back(make_pair("timeLocalSolve", m_simulator->m_timeLocalSolve));
+    times.push_back(make_pair("timeGlobalSolve", m_simulator->m_timeGlobalSolve));
+    times.push_back(make_pair("timeSetPositions", m_simulator->m_timeSetPositions));
+    times.push_back(make_pair("timeFinish", m_simulator->m_timeFinish));
+    times.push_back(make_pair("timeTotal", m_simulator->m_timeTotal));
+
+    for(int i=0; i<times.size(); ++i)
+    {
+        QString str = times[i].first + ": " + QString::number(times[i].second) + " ms";
+        this->drawText(5, height()-pixelHeight*(times.size() - i), str);
+    }
+
+    std::vector<std::pair<QString, int> > info;
+    info.push_back(make_pair("NumParticles", m_simulator->m_numParticles));
+    info.push_back(make_pair("NumConstraints", m_simulator->m_numConstraints));
+    info.push_back(make_pair("NumIterations", m_simulator->m_iterations));
+
+    for(int i=0; i<info.size(); ++i)
+    {
+        QString str = info[i].first + ": " + QString::number(info[i].second);
+        QFontMetrics fm(font);
+        int textWidth=fm.width(str);
+        this->drawText(width() - textWidth - 5, 30+pixelHeight*i, str);
+    }
+
+    glPopAttrib();
 }
 
 void Viewer::animate()
@@ -536,6 +566,7 @@ void Viewer::animate()
         if(m_saveVideo && (m_currentTime - m_timeOfLastImage - 1.0/m_videoFps > 0.0001 || !m_videoWriter.isOpened()))
         {
             repaint();
+            postDraw();
             QImage img = this->grab().toImage();
             cv::Mat mat = qImageToCVMat(img);
 
@@ -586,6 +617,8 @@ void Viewer::keyPressEvent(QKeyEvent *key)
     }
     else if(key->text() == "r")
     {
+        if(key->modifiers() == Qt::SHIFT)
+            m_init = false;
         reset();
     }
     else if(key->text() == "v")
@@ -778,10 +811,10 @@ Viewer::Viewer(QWidget *parent) : QGLViewer(parent)
     m_restitution = 1;
     m_damping = 1;
 
-    m_springStiffness = 10000;
+    m_springStiffness = 100;
     m_tetraStiffness = 10000;
-    m_collisionStiffness = 100000000;
-    m_positionStiffness = 100000000;
+    m_collisionStiffness = 200;
+    m_positionStiffness = 500;
 
     m_simulator = 0;
 

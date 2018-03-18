@@ -14,13 +14,17 @@ public:
 
     ProjectiveBody *m_body;
 
-    ProjectiveConstraint(ProjectiveBody* body, float stiffness, int numParticles)
-        : m_body(body), m_stiffness(stiffness), m_numParticles(numParticles)
-    {}
+    int m_rhsComputedForNumParticles;
+    int m_rhsComputedForBodyIndex;
+    Eigen::SparseMatrix<float> m_rhsMatrix[3];
+
+    ProjectiveConstraint(ProjectiveBody* body, float stiffness, int numParticles);
 
     virtual Eigen::MatrixXf getAMatrix() = 0;
     virtual Eigen::MatrixXf getBMatrix() = 0;
     virtual Eigen::SparseMatrix<float> getSMatrix(int numParticles, int bodyIndex, int dim) = 0;
+
+    Eigen::SparseMatrix<float> &getRhsMatrix(int numParticles, int bodyIndex, int dim);
 
     virtual int getVIndex(int index) = 0;
 

@@ -119,8 +119,14 @@ void Simulator::initialize(float dt, int iterations, vector<ProjectiveBody*> &bo
 
 void Simulator::advanceTime()
 {   
-    QTime myTotalTimer;
+    QTime myTotalTimer, myTimer;
+    m_timeLocalSolve = 0;
+    m_timeGlobalSolve = 0;
+    m_timeSetPositions = 0;
+
     myTotalTimer.start();
+
+    myTimer.start();
 
     Eigen::VectorXf qold[3], rhs[3];
     qold[0] = m_q[0];
@@ -146,56 +152,27 @@ void Simulator::advanceTime()
     m_q[1] = m_sn[1];
     m_q[2] = m_sn[2];
 
+    for(int i=0; i<m_bodies.size(); ++i)
+    {
+        int numParticles = m_bodies[i]->getNumParticles();
+        int bodyIndex = m_bodyToIndex[m_bodies[i]];
+        m_bodies[i]->setPositions(m_q[0].segment(bodyIndex,numParticles),
+                                    m_q[1].segment(bodyIndex,numParticles), m_q[2].segment(bodyIndex,numParticles));
+    }
+
     rhs[0].resize(m_numParticles);
     rhs[1].resize(m_numParticles);
     rhs[2].resize(m_numParticles);
-    m_collisions.clear();
 
-    for(int i=0;i<m_bodies.size();++i)
-    {
-        if(m_bodies[i]->getCCDHandler())
-            m_bodies[i]->getCCDHandler()->PreQueryNoUpdatePositions(false);
-    }
+    m_timeStart = myTimer.elapsed();
 
-    for(int i=0; i<m_bodies.size(); ++i)
-    {
-        if(m_bodies[i]->getType() == ProjectiveBody::STATIC)
-            continue;
+    detectCollisions();
 
-        for(int j=i+1; j<m_bodies.size(); ++j)
-        {
-            if(!m_bodies[i]->getCCDHandler() || !m_bodies[j]->getCCDHandler())
-                continue;
-
-            vector<CollisionInfo*> newCollisions = CDQueries::HashQuery(m_bodies[i]->getCCDHandler(), m_bodies[j]->getCCDHandler(), false);
-            std::set<std::pair<int, int> > collisionsFound;
-            for(int k=0; k<newCollisions.size(); ++k)
-            {
-                CollisionInfoVF* col = (CollisionInfoVF*) newCollisions[k];
-                auto it = collisionsFound.find(std::make_pair(col->v->Id(), col->f->Id()));
-                if(it != collisionsFound.end())
-                    continue;
-                if(col->objsSwitched)
-                    continue;
-                collisionsFound.insert(std::make_pair(col->v->Id(), col->f->Id()));
-                m_collisions.push_back(Collision(m_bodies[i], m_bodies[j], col));
-            }
-        }
-    }
-//    std::cout << "NumCollisions: " << m_collisions.size() << std::endl;
-    for(int i=0;i<m_bodies.size();++i)
-    {
-        if(m_bodies[i]->getCCDHandler())
-            m_bodies[i]->getCCDHandler()->PostQuery();
-    }
 
     for(int iter=0;iter<m_iterations;++iter)
     {
-        QTime myTimer, myIterTimer;
-        myIterTimer.start();
-        myTimer.start();
 
-        m_timeCollisionDetection = myTimer.elapsed();
+        myTimer.restart();
 
         rhs[0].setZero();
         rhs[1].setZero();
@@ -203,8 +180,6 @@ void Simulator::advanceTime()
         m_projected.clear();
         m_projectedCollisions.clear();
         m_appliedCollisions.clear();
-
-        myTimer.restart();
 
         std::vector<Eigen::VectorXf> indepRhs[3];
         indepRhs[0].resize(m_constraints.size());
@@ -229,19 +204,11 @@ void Simulator::advanceTime()
 
             c->project(q, p);
 
-//#pragma omp critical
-//            {
-//            m_projected.insert(m_projected.end(), p.begin(), p.end());
-//            }
             indepProjected[i].insert(indepProjected[i].end(), p.begin(), p.end());
 
-            Eigen::MatrixXf Ai = c->getAMatrix();
-            Eigen::MatrixXf Bi = c->getBMatrix();
-
-
-            Eigen::SparseMatrix<float> SiX = c->getSMatrix(m_numParticles, bodyIndex, 0);
-            Eigen::SparseMatrix<float> SiY = c->getSMatrix(m_numParticles, bodyIndex, 1);
-            Eigen::SparseMatrix<float> SiZ = c->getSMatrix(m_numParticles, bodyIndex, 2);
+            Eigen::SparseMatrix<float> constraintRhsMatrixX = c->getRhsMatrix(m_numParticles, bodyIndex, 0);
+            Eigen::SparseMatrix<float> constraintRhsMatrixY = c->getRhsMatrix(m_numParticles, bodyIndex, 1);
+            Eigen::SparseMatrix<float> constraintRhsMatrixZ = c->getRhsMatrix(m_numParticles, bodyIndex, 2);
 
 
             std::vector<Eigen::VectorXf> pdim(3);
@@ -255,15 +222,9 @@ void Simulator::advanceTime()
                     pdim[k][j] = p[j][k];
             }
 
-//#pragma omp critical
-//            {
-//                rhs[0] += c->m_stiffness * SiX.transpose() * Ai.transpose() * Bi * pdim[0];
-//                rhs[1] += c->m_stiffness * SiY.transpose() * Ai.transpose() * Bi * pdim[1];
-//                rhs[2] += c->m_stiffness * SiZ.transpose() * Ai.transpose() * Bi * pdim[2];
-//            }
-            indepRhs[0][i] = c->m_stiffness * SiX.transpose() * Ai.transpose() * Bi * pdim[0];
-            indepRhs[1][i] = c->m_stiffness * SiY.transpose() * Ai.transpose() * Bi * pdim[1];
-            indepRhs[2][i] = c->m_stiffness * SiZ.transpose() * Ai.transpose() * Bi * pdim[2];
+            indepRhs[0][i] = constraintRhsMatrixX * pdim[0];
+            indepRhs[1][i] = constraintRhsMatrixY * pdim[1];
+            indepRhs[2][i] = constraintRhsMatrixZ * pdim[2];
         }
 
         for(int i=0;i<m_constraints.size(); ++ i)
@@ -284,13 +245,19 @@ void Simulator::advanceTime()
         collisionsLHS[1].setZero();
         collisionsLHS[2].setZero();
 
+        vector< vector<std::pair<Collision*, int> > > indepAppliedCollisions;
+        indepAppliedCollisions.resize(m_collisions.size());
+
+        vector< vector<Eigen::Vector3f> > indepProjectedCollisions;
+        indepProjectedCollisions.resize(m_collisions.size());
+
 #pragma omp parallel for
         for(int i=0;i<m_collisions.size(); ++ i)
         {
             CollisionInfoVF* col = (CollisionInfoVF*) m_collisions[i].info;
 
 
-            col->n.normalize();
+//            col->n.normalize();
             LA::Vector3 p_projLA = col->v->Position() - Vector3::dotProd(col->v->Position() - col->p, col->n) * col->n;
             LA::Vector3 pToProj = p_projLA - col->v->Position();
             pToProj.normalize();
@@ -308,7 +275,6 @@ void Simulator::advanceTime()
                 Eigen::Vector3f p_proj_new = constraints[j].getPosition();
                 Eigen::Vector3f ne = toEigenVector3(col->n);
 
-
                 Eigen::Vector3f inertiaPos = Eigen::Vector3f(
                             m_sn[0][bodyIndex+constraints[j].getVIndex(0)],
                         m_sn[1][bodyIndex+constraints[j].getVIndex(0)],
@@ -318,39 +284,38 @@ void Simulator::advanceTime()
                 if(snToProj.dot(ne) > 0)
                     continue;
 
-                m_appliedCollisions.push_back(std::make_pair(&m_collisions[i], j));
-                m_projectedCollisions.push_back(p_proj_new);
+                indepAppliedCollisions[i].push_back(std::make_pair(&m_collisions[i], j));
+                indepProjectedCollisions[i].push_back(p_proj_new);
 
-
-                Eigen::MatrixXf Ai = constraints[j].getAMatrix();
-                Eigen::MatrixXf Bi = constraints[j].getBMatrix();
-
-                Eigen::SparseMatrix<float> SiX = constraints[j].getSMatrix(m_numParticles, bodyIndex, 0);
-                Eigen::SparseMatrix<float> SiY = constraints[j].getSMatrix(m_numParticles, bodyIndex, 1);
-                Eigen::SparseMatrix<float> SiZ = constraints[j].getSMatrix(m_numParticles, bodyIndex, 2);
-
-
+                int index = bodyIndex+constraints[j].getVIndex(0);
     #pragma omp critical
                 {
-                    rhs[0] += constraints[j].m_stiffness * SiX.transpose() * Ai.transpose() * Bi * p_proj_new[0];
-                    rhs[1] += constraints[j].m_stiffness * SiY.transpose() * Ai.transpose() * Bi * p_proj_new[1];
-                    rhs[2] += constraints[j].m_stiffness * SiZ.transpose() * Ai.transpose() * Bi * p_proj_new[2];
+                    rhs[0][index] += m_collisionStiffness * p_proj_new[0];
+                    rhs[1][index] += m_collisionStiffness * p_proj_new[1];
+                    rhs[2][index] += m_collisionStiffness * p_proj_new[2];
                 }
 
     #pragma omp critical
                 {
-                    collisionsLHS[0] = collisionsLHS[0] + constraints[j].m_stiffness * SiX.transpose() * Ai.transpose() * Ai * SiX;
-                    collisionsLHS[1] = collisionsLHS[1] + constraints[j].m_stiffness * SiY.transpose() * Ai.transpose() * Ai * SiY;
-                    collisionsLHS[2] = collisionsLHS[2] + constraints[j].m_stiffness * SiZ.transpose() * Ai.transpose() * Ai * SiZ;
+                    collisionsLHS[0].coeffRef(index,index) += constraints[j].m_stiffness;
+                    collisionsLHS[1].coeffRef(index,index) += constraints[j].m_stiffness;
+                    collisionsLHS[2].coeffRef(index,index) += constraints[j].m_stiffness;
                 }
             }
-
         }
+
+        for(int i=0; i<m_collisions.size(); ++i)
+        {
+            m_appliedCollisions.insert(m_appliedCollisions.end(), indepAppliedCollisions[i].begin(), indepAppliedCollisions[i].end());
+            m_projectedCollisions.insert(m_projectedCollisions.end(), indepProjectedCollisions[i].begin(), indepProjectedCollisions[i].end());
+        }
+        m_numConstraints = m_projected.size() + m_projectedCollisions.size();
+
         m_Lhs[0] = m_Lhs[0] + collisionsLHS[0];
         m_Lhs[1] = m_Lhs[1] + collisionsLHS[1];
         m_Lhs[2] = m_Lhs[2] + collisionsLHS[2];
 
-        m_timeLocalSolve = myTimer.elapsed();
+        m_timeLocalSolve += myTimer.elapsed();
         myTimer.restart();
 
         rhs[0] += (1.0/(m_dt*m_dt)) * m_massMatrix * m_sn[0];
@@ -376,7 +341,8 @@ void Simulator::advanceTime()
         m_Lhs[1] = m_Lhs[1] - collisionsLHS[1];
         m_Lhs[2] = m_Lhs[2] - collisionsLHS[2];
 
-        m_timeGlobalSolve = myTimer.elapsed();
+        m_timeGlobalSolve += myTimer.elapsed();
+        myTimer.restart();
 
         if(m_cholesky[0].info() != Eigen::Success)
             std::cout << "Error solving system x" << std::endl;
@@ -391,18 +357,13 @@ void Simulator::advanceTime()
         {
             int numParticles = m_bodies[i]->getNumParticles();
             int bodyIndex = m_bodyToIndex[m_bodies[i]];
-            m_bodies[i]->setPositions(m_q[0].segment(bodyIndex,numParticles), m_q[1].segment(bodyIndex,numParticles), m_q[2].segment(bodyIndex,numParticles));
+            m_bodies[i]->setPositions(m_q[0].segment(bodyIndex,numParticles),
+                                        m_q[1].segment(bodyIndex,numParticles), m_q[2].segment(bodyIndex,numParticles));
         }
-
-
-        //        cout << "##################################################" << endl;
-        //        cout << "Iter " << iter << endl;
-        //        cout << "Collision Time: " << m_timeCollisionDetection << endl;
-        //        cout << "Local Solve Time: " << m_timeLocalSolve << endl;
-        //        cout << "Global Solve Time: " << m_timeGlobalSolve << endl;
-        //        cout << "Total Iter Time: " << myIterTimer.elapsed() << endl;
-        //        cout << "##################################################" << endl;
+        m_timeSetPositions += myTimer.elapsed();
     }
+
+    myTimer.restart();
 
     Eigen::VectorXf vOld[3];
     vOld[0] = m_v[0];
@@ -429,5 +390,63 @@ void Simulator::advanceTime()
         m_v[2][index] = vReflect[2];
     }
 
-//    cout << "Total Time: " << myTotalTimer.elapsed() << endl;
+    m_timeFinish = myTimer.elapsed();
+    m_timeTotal = myTotalTimer.elapsed();
+    //    cout << "Total Time: " << myTotalTimer.elapsed() << endl;
+}
+
+void Simulator::detectCollisions()
+{
+    QTime timer;
+    timer.start();
+    m_collisions.clear();
+    m_normalsCollisions.clear();
+
+    for(int i=0;i<m_bodies.size();++i)
+    {
+        if(m_bodies[i]->getCCDHandler())
+            m_bodies[i]->getCCDHandler()->PreQueryNoUpdatePositions(false);
+    }
+
+    for(int i=0; i<m_bodies.size(); ++i)
+    {
+        if(m_bodies[i]->getType() == ProjectiveBody::STATIC)
+            continue;
+
+        for(int j=i+1; j<m_bodies.size(); ++j)
+        {
+            if(!m_bodies[i]->getCCDHandler() || !m_bodies[j]->getCCDHandler())
+                continue;
+
+            vector<CollisionInfo*> newCollisions = CDQueries::HashQuery(m_bodies[i]->getCCDHandler(), m_bodies[j]->getCCDHandler(), false);
+//            std::set<std::pair<int, int> > collisionsFound;
+            std::set<int > collisionsFound;
+            for(int k=0; k<newCollisions.size(); ++k)
+            {
+                CollisionInfoVF* col = (CollisionInfoVF*) newCollisions[k];
+                if(col->objsSwitched)
+                    continue;
+//                auto it = collisionsFound.find(std::make_pair(col->v->Id(), col->f->Id()));
+//                if(it != collisionsFound.end())
+//                    continue;
+//                collisionsFound.insert(std::make_pair(col->v->Id(), col->f->Id()));
+                auto it = collisionsFound.find(col->v->Id());
+                if(it != collisionsFound.end())
+                    continue;
+                collisionsFound.insert(col->v->Id());
+                col->n.normalize();
+                m_normalsCollisions.push_back(make_pair(toEigenVector3(col->p), toEigenVector3(col->n)));
+                m_collisions.push_back(Collision(m_bodies[i], m_bodies[j], col));
+
+            }
+        }
+    }
+//    std::cout << "NumCollisions: " << m_collisions.size() << std::endl;
+    for(int i=0;i<m_bodies.size();++i)
+    {
+        if(m_bodies[i]->getCCDHandler())
+            m_bodies[i]->getCCDHandler()->PostQuery();
+    }
+
+    m_timeCollisionDetection = timer.elapsed();
 }

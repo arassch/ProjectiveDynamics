@@ -50,7 +50,8 @@ SOURCES  = main.cpp \
     springBody.cpp \
     tetraBody.cpp \
     viewerInterface.cpp \
-    hairBody.cpp
+    hairBody.cpp \
+    projectiveConstraint.cpp
 
 FORMS *= viewerInterface.ui
 
