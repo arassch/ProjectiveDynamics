@@ -30,13 +30,13 @@ void Viewer::init()
 
     m_bodies.clear();
 
-    testSceneClothOnStaticBody();
+//    testSceneClothOnStaticBody();
 //    testSceneClothConstrainedTopCorners();
 //    testSceneClothConstrainedCorners();
 //    testSceneClothDropping();
 //    testSceneDeformableSphere();
 //    testSceneDeformableBlock();
-//    testSceneDeformableBlockDropping();
+    testSceneDeformableBlockDropping();
 //    testSceneSingleSpring();
 
 
@@ -61,9 +61,9 @@ void Viewer::testSceneClothOnStaticBody()
     {
         m_demoName = "ClothOnStaticBody";
         m_videoFps = 24;
-        m_dt = 0.005;
-        m_meshRows = 25;
-        m_meshColumns = 25;
+        m_dt = 0.01;
+        m_meshRows = 15;
+        m_meshColumns = 15;
         m_meshSize = 1.4;
         m_springStiffness = 50;
         m_collisionStiffness = 200;
@@ -318,25 +318,10 @@ void Viewer::testSceneDeformableBlock()
     {
         TriMesh* mesh = TriMesh::ReadFromFile(triFilename.toStdString().c_str(), TriMesh::OBJ, scale);
         std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
-        mesh->Transform(LA::Vector3(0,0,-0.0), LA::Quaternion(0,1,0,0));
 
-        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 100, tetraResolution, false, 0.99, 1);
-
-        for(int i=0;i<leftVertices.size();++i)
-        {
-            body->addPositionConstraint(m_positionStiffness, leftVertices[i]->Id());
-        }
-
-        m_bodies.push_back(body);
-    }
-
-    {
-        TriMesh* mesh = TriMesh::ReadFromFile(triFilename.toStdString().c_str(), TriMesh::OBJ, scale);
-        std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
-        mesh->Transform(LA::Vector3(0,0,-1), LA::Quaternion(0,1,0,0));
-
-        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 1000, tetraResolution, false, 0.99, 1, 1.0, LA::Vector3(0,0,-1));
-
+        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 100, tetraResolution, false, 0.99, 1,
+                                        1.0, LA::Vector3(0,0,-0.0));
+//        mesh->Transform(LA::Vector3(0,0,-0.0), LA::Quaternion(0,1,0,0));
 
         for(int i=0;i<leftVertices.size();++i)
         {
@@ -349,9 +334,27 @@ void Viewer::testSceneDeformableBlock()
     {
         TriMesh* mesh = TriMesh::ReadFromFile(triFilename.toStdString().c_str(), TriMesh::OBJ, scale);
         std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
-        mesh->Transform(LA::Vector3(0,0,-2), LA::Quaternion(0,1,0,0));
+//        mesh->Transform(LA::Vector3(0,0,-1), LA::Quaternion(0,1,0,0));
 
-        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 10000, tetraResolution, false, 0.99, 1, 1.0, LA::Vector3(0,0,-2));
+        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 1000, tetraResolution, false, 0.99, 1,
+                                        1.0, LA::Vector3(0,0,-1));
+
+
+        for(int i=0;i<leftVertices.size();++i)
+        {
+            body->addPositionConstraint(m_positionStiffness, leftVertices[i]->Id());
+        }
+
+        m_bodies.push_back(body);
+    }
+
+    {
+        TriMesh* mesh = TriMesh::ReadFromFile(triFilename.toStdString().c_str(), TriMesh::OBJ, scale);
+        std::vector<TriVertex*> leftVertices = *(mesh->getTriVertexInBB(bbox));
+//        mesh->Transform(LA::Vector3(0,0,-2), LA::Quaternion(0,1,0,0));
+
+        TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, 10000, tetraResolution, false, 0.99, 1,
+                                        1.0, LA::Vector3(0,0,-2));
 
 
         for(int i=0;i<leftVertices.size();++i)
@@ -370,8 +373,15 @@ void Viewer::testSceneDeformableBlockDropping()
     if(!m_init)
     {
         m_demoName = "DeformableBlockDropping";
-        m_dt = 0.001;
+        m_dt = 0.01;
         m_iterations = 3;
+        m_videoFps = 24;
+        m_iterations = 3;
+        m_totalMass = 5;
+        m_tetraStiffness = 1000;
+        m_collisionStiffness = 2000;
+        m_restitution = 0.2;
+        m_damping = 0.99;
 
         m_init = true;
     }
@@ -379,13 +389,19 @@ void Viewer::testSceneDeformableBlockDropping()
     glPointSize(10.0);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    QString filename = "/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv";
-    TriMesh* mesh = TriMesh::ReadFromFile((filename + ".obj").toStdString().c_str(), TriMesh::OBJ);
-    mesh->Transform(Vector3(0,0,0), LA::Quaternion::FromAngleAxis(M_PI/4, Vector3(0,1,1)));
-
     int tetraResolution=10;
-    filename += "_" + QString::number(tetraResolution);
-    TetraBody* body = new TetraBody((filename + ".tetra").toStdString().c_str(), mesh, "block", m_totalMass, m_tetraStiffness, tetraResolution, true, 0.99, 1);
+    float scale = 1;
+    QString triFilename = "/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv.obj";
+    QString tetraFilename = "/Users/sarac.schvartzman/Dropbox/Code/blockSubdiv_" +
+            QString::number(scale) + "_" +
+            QString::number(tetraResolution) +
+            ".tetra";
+    TriMesh* mesh = TriMesh::ReadFromFile(triFilename.toStdString().c_str(), TriMesh::OBJ, scale);
+
+    Vector3 translation = Vector3(0,0,0);
+    LA::Quaternion rotation = LA::Quaternion::FromAngleAxis(M_PI_4, Vector3(0,1,1));
+    TetraBody* body = new TetraBody(tetraFilename.toStdString().c_str(), mesh, "block", m_totalMass, m_tetraStiffness, tetraResolution, true, 0.99, 1, scale,
+                                    translation, rotation.ToRotationMatrix());
 
 
     m_bodies.push_back(body);
@@ -505,8 +521,6 @@ void Viewer::draw()
                     m_simulator->m_normalsCollisions[i].first[2]);
             Eigen::Vector3f p2 = m_simulator->m_normalsCollisions[i].first + m_simulator->m_normalsCollisions[i].second*0.1;
             glVertex3f(p2[0], p2[1], p2[2]);
-
-
         }
         glEnd();
 

@@ -171,7 +171,6 @@ void Simulator::advanceTime()
 
     for(int iter=0;iter<m_iterations;++iter)
     {
-
         myTimer.restart();
 
         rhs[0].setZero();
@@ -256,8 +255,6 @@ void Simulator::advanceTime()
         {
             CollisionInfoVF* col = (CollisionInfoVF*) m_collisions[i].info;
 
-
-//            col->n.normalize();
             LA::Vector3 p_projLA = col->v->Position() - Vector3::dotProd(col->v->Position() - col->p, col->n) * col->n;
             LA::Vector3 pToProj = p_projLA - col->v->Position();
             pToProj.normalize();
@@ -275,10 +272,12 @@ void Simulator::advanceTime()
                 Eigen::Vector3f p_proj_new = constraints[j].getPosition();
                 Eigen::Vector3f ne = toEigenVector3(col->n);
 
+                int index = bodyIndex+constraints[j].getVIndex(0);
+
                 Eigen::Vector3f inertiaPos = Eigen::Vector3f(
-                            m_sn[0][bodyIndex+constraints[j].getVIndex(0)],
-                        m_sn[1][bodyIndex+constraints[j].getVIndex(0)],
-                        m_sn[2][bodyIndex+constraints[j].getVIndex(0)]);
+                            m_sn[0][index],
+                        m_sn[1][index],
+                        m_sn[2][index]);
                 Eigen::Vector3f snToProj = inertiaPos - p_proj_new;
                 snToProj.normalize();
                 if(snToProj.dot(ne) > 0)
@@ -287,12 +286,11 @@ void Simulator::advanceTime()
                 indepAppliedCollisions[i].push_back(std::make_pair(&m_collisions[i], j));
                 indepProjectedCollisions[i].push_back(p_proj_new);
 
-                int index = bodyIndex+constraints[j].getVIndex(0);
     #pragma omp critical
                 {
-                    rhs[0][index] += m_collisionStiffness * p_proj_new[0];
-                    rhs[1][index] += m_collisionStiffness * p_proj_new[1];
-                    rhs[2][index] += m_collisionStiffness * p_proj_new[2];
+                    rhs[0][index] += constraints[j].m_stiffness * p_proj_new[0];
+                    rhs[1][index] += constraints[j].m_stiffness * p_proj_new[1];
+                    rhs[2][index] += constraints[j].m_stiffness * p_proj_new[2];
                 }
 
     #pragma omp critical
@@ -381,7 +379,7 @@ void Simulator::advanceTime()
         Collision *col = m_appliedCollisions[i].first;
         CollisionInfoVF* info = (CollisionInfoVF*) col->info;
         std::vector<int> indices = col->body1->getIndices(info->v->Id());
-        int index = indices[m_appliedCollisions[i].second];
+        int index = m_bodyToIndex[col->body1] + indices[m_appliedCollisions[i].second];
         Eigen::Vector3f n = toEigenVector3(info->n);
         Eigen::Vector3f v(vOld[0][index], vOld[1][index], vOld[2][index]);
         Eigen::Vector3f vReflect = (v - 2*(v.dot(n))*n)*col->body1->getRestitution();

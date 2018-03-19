@@ -12,7 +12,7 @@ TetraBody::TetraBody(string filename, TriMesh *mesh, std::string name, float tot
     if(f.good())
     {
         f.close();
-        m_tetraMesh = TetraMesh::ReadFromFile(filename.c_str(), TetraMesh::MESH, scale, translate, rotate);
+        m_tetraMesh = TetraMesh::ReadFromFile(filename.c_str(), TetraMesh::MESH, 1.0, Vector3::ZERO);
     }
     else
     {
@@ -20,6 +20,8 @@ TetraBody::TetraBody(string filename, TriMesh *mesh, std::string name, float tot
         m_tetraMesh->WriteToFile(filename.c_str());
     }
     m_mesh = m_tetraMesh->LinkTriMesh(mesh);
+    m_tetraMesh->Transform(translate, LA::Quaternion::FromRotationMatrix(rotate));
+    m_mesh->ComputePositions();
 
     m_numParticles = m_tetraMesh->numVertices();
     for(int i=0; i<m_numParticles; ++i)
